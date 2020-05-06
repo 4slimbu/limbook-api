@@ -1,5 +1,4 @@
   name: limbook-api-ci
-    description: CI for limbook api
 
   on:
     push:
