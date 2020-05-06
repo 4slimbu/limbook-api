@@ -37,15 +37,17 @@
 
         - name: Deploy to staging
           if: github.ref == 'refs/heads/develop'
+          env:
+            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           run: |
-            export HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }}
             heroku git:remote -a staging-limbook-api
             git push heroku HEAD:master
 
         - name: Deploy to production
           if: github.ref == 'refs/heads/master'
+          env:
+            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           run: |
-            export HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }}
             heroku git:remote -a limbook-api
             git push heroku HEAD:master
 
