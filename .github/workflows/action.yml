@@ -39,11 +39,13 @@
           if: github.ref == 'refs/heads/develop'
           run: |
             git remote add heroku https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_STAGE_APP_NAME }}.git
+            git fetch --all --unshallow
             git push heroku HEAD:master -f
 
         - name: Deploy to production
           if: github.ref == 'refs/heads/master'
           run: |
             git remote add heroku https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_PROD_APP_NAME }}.git
+            git fetch --all --unshallow
             git push heroku HEAD:master -f
 
