@@ -47,7 +47,7 @@
           if: github.ref == 'refs/heads/master'
           env:
             HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-            run: |
-              heroku git:remote -a limbook-api
-              git push heroku HEAD:master
+          run: |
+            heroku git:remote -a limbook-api
+            git push heroku HEAD:master
 
