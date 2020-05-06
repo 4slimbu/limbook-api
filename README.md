@@ -26,3 +26,8 @@ Run app
 ```shell script
 python run.py
 ```
+
+# Test
+```shell script
+python -m unittest tests/app_test.py
+```
