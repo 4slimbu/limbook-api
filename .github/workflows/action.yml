@@ -35,18 +35,28 @@
           run: |
             python -m unittest tests/*test.py
 
+        - name: Set heroku credentials
+          env:
+            HEROKU_LOGIN: ${{ secrets.HEROKU_LOGIN }}
+            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          run: |
+            cat > ~/.netrc << EOF
+            machine api.heroku.com
+              login $HEROKU_LOGIN
+              password $HEROKU_API_KEY
+            machine git.heroku.com
+              login $HEROKU_LOGIN
+              password $HEROKU_API_KEY
+            EOF
+
         - name: Deploy to staging
           if: github.ref == 'refs/heads/develop'
-          env:
-            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           run: |
             heroku git:remote -a staging-limbook-api
             git push heroku HEAD:master
 
         - name: Deploy to production
           if: github.ref == 'refs/heads/master'
-          env:
-            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           run: |
             heroku git:remote -a limbook-api
             git push heroku HEAD:master
