@@ -35,6 +35,10 @@
           run: |
             python -m unittest tests/*test.py
 
+        - name: Install heroku-cli
+          run: |
+            curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+
         - name: Deploy to staging
           if: github.ref == 'refs/heads/develop'
           env:
