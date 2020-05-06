@@ -53,13 +53,11 @@
           if: github.ref == 'refs/heads/develop'
           run: |
             heroku git:remote -a staging-limbook-api
-            git fetch --all --unshallow
             git push heroku HEAD:master
 
         - name: Deploy to production
           if: github.ref == 'refs/heads/master'
           run: |
             heroku git:remote -a limbook-api
-            git fetch --all --unshallow
             git push heroku HEAD:master
 
