@@ -1,4 +1,3 @@
-import os
 from limbook_api import create_app
 
 app = create_app()
