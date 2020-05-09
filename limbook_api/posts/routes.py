@@ -2,13 +2,13 @@ from flask import Blueprint, jsonify, abort
 
 from limbook_api.db.main import Post
 
-posts = Blueprint('posts', __name__)
+posts = Blueprint('posts', __name__, url_prefix='/posts')
 
 
 # ====================================
 # ROUTES
 # ====================================
-@posts.route("/", methods=['GET'])
+@posts.route("", methods=['GET'])
 def get_posts():
     """ Get all available posts
 
@@ -25,8 +25,8 @@ def get_posts():
 
         # format
         data = []
-        for drink in posts:
-            data.append(drink.short())
+        for post in posts:
+            data.append(post.format())
 
         # return the result
         return jsonify({
@@ -34,5 +34,5 @@ def get_posts():
             'posts': data,
             'posts_count': posts_count
         })
-    except Exception:
+    except Exception as e:
         abort(400)

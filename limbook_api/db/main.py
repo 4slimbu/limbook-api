@@ -80,5 +80,16 @@ class Post(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    """
+    format()
+        format the data for the api
+    """
+    def format(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'user_id': self.user_id,
+        }
+
     def __repr__(self):
-        return json.dumps(self.short())
+        return json.dumps(self.format())
