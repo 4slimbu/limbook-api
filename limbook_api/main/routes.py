@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template
 
-from limbook_api.auth.auth import requires_auth, AuthError
+from limbook_api.auth.auth import requires_auth
 
 main = Blueprint('main', __name__)
 
@@ -11,7 +11,7 @@ def home():
 
 
 @main.route("/secure-route")
-@requires_auth('get:drinks-detail')
-def secure():
+@requires_auth('create:posts')
+def secure(payload):
     return 'Secure location accessed'
 

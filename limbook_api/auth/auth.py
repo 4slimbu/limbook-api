@@ -1,4 +1,5 @@
 import json
+import os
 from functools import wraps
 from urllib.request import urlopen
 
@@ -6,10 +7,6 @@ from flask import request, abort, current_app
 from jose import jwt
 
 from limbook_api.errors.handlers import AuthError
-
-AUTH0_DOMAIN = 'limvus.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'coffee-shop-auth'
 
 
 def get_token_auth_header():
@@ -60,13 +57,18 @@ def verify_decode_jwt(token):
         Raises:
             AuthError: Unable to verify jwt
     """
+    # Init
+    auth0_domain = current_app.config.get('AUTH0_DOMAIN')
+    algorithms = current_app.config.get('ALGORITHMS')
+    api_audience = current_app.config.get('API_AUDIENCE')
+
     # TODO: find a better solution instead of this hack for testing
     if current_app.config.get('TESTING'):
         if request.args.get('mock_jwt_claim') == 'True':
             return jwt.get_unverified_claims(token)
 
-    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
-    jwks = json.loads(jsonurl.read())
+    json_url = urlopen(f'https://{auth0_domain}/.well-known/jwks.json')
+    jwks = json.loads(json_url.read())
 
     # Get the data in the header
     unverified_header = jwt.get_unverified_header(token)
@@ -95,9 +97,9 @@ def verify_decode_jwt(token):
             payload = jwt.decode(
                 token,
                 rsa_key,
-                algorithms=ALGORITHMS,
-                audience=API_AUDIENCE,
-                issuer='https://' + AUTH0_DOMAIN + '/'
+                algorithms=algorithms,
+                audience=api_audience,
+                issuer='https://' + auth0_domain + '/'
             )
             return payload
 

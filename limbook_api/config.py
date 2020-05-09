@@ -15,3 +15,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 
+    # Auth0 credentials
+    AUTH0_DOMAIN = 'limvus.auth0.com'
+    ALGORITHMS = ['RS256']
+    API_AUDIENCE = 'coffee-shop-auth'
