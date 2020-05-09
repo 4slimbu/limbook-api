@@ -7,15 +7,7 @@ class Config:
 
     # App secret
     # SECRET_KEY = os.environ.get('SECRET_KEY')
-    SECRET_KEY = 'my_secret_key'
-
-    # Configure SQLAlchemy and database
     # SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///site.db'
+    SECRET_KEY = "my_secret_key"
+    SQLALCHEMY_DATABASE_URI = "postgres://postgres:password@localhost:5432/limbook_api"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
-
-    # Auth0 credentials
-    AUTH0_DOMAIN = 'limvus.auth0.com'
-    ALGORITHMS = ['RS256']
-    API_AUDIENCE = 'coffee-shop-auth'
