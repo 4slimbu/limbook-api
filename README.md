@@ -24,7 +24,22 @@ $ source ~/.bash_profile
 ```
 Run app
 ```shell script
+# using python
 python run.py
+# using flask
+export FLASK_APP=limbook_api
+flask run
+```
+Run migration
+```shell script
+# initialize and run migration
+flask db init
+flask db migrate
+flask db upgrade
+```
+Seed demo data
+```shell script
+flask seed run
 ```
 
 # Test
