@@ -4,7 +4,7 @@ from flask import json
 
 from limbook_api import create_app
 from limbook_api.config_test import Config
-from limbook_api.db.main import create_random_post, db_drop_and_create_all
+from limbook_api.db.model import create_random_post, db_drop_and_create_all
 
 
 class PostsTestCase(TestCase):

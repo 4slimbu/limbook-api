@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.auth.auth import requires_auth
-from limbook_api.db.main import Post
+from limbook_api.db.model import Post
 
 posts = Blueprint('posts', __name__)
 
