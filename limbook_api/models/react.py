@@ -4,7 +4,7 @@ from random import randint
 from limbook_api.models.setup import db
 
 
-def create_random_react(react=None):
+def create_react(react=None):
     """Generates new react with random attributes for testing
     """
     if react:

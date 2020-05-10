@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 
-from limbook_api.auth.auth import requires_auth
+from limbook_api.auth.auth import requires_auth, auth_user_id
 from limbook_api.models.comment import Comment
 
 comments = Blueprint('comments', __name__)
@@ -36,11 +36,10 @@ def get_all_comments_in_json(post_id):
 # ====================================
 @comments.route("/posts/<int:post_id>/comments", methods=['GET'])
 @requires_auth('read:comments')
-def get_comments(payload, post_id):
+def get_comments(post_id):
     """ Get all available comments
 
         Parameters:
-             payload (dict): The payload of decoded valid token
              post_id (int): Id of post to which comments belong to
 
         Returns:
@@ -56,11 +55,10 @@ def get_comments(payload, post_id):
 
 @comments.route("/posts/<int:post_id>/comments", methods=['POST'])
 @requires_auth('create:comments')
-def create_comments(payload, post_id):
+def create_comments(post_id):
     """ Create new comments
 
         Parameters:
-            payload (dict): The payload of decoded valid token
             post_id (int): Id of post to which comment will belong
 
         Internal Parameters:
@@ -80,7 +78,7 @@ def create_comments(payload, post_id):
     # create comment
     comment = Comment(**{
         'content': data.get('content'),
-        'user_id': payload.get('sub'),
+        'user_id': auth_user_id(),
         'post_id': post_id
     })
 
@@ -93,11 +91,10 @@ def create_comments(payload, post_id):
 
 @comments.route("/posts/<int:post_id>/comments/<int:comment_id>", methods=['PATCH'])
 @requires_auth('update:comments')
-def update_comments(payload, post_id, comment_id):
+def update_comments(post_id, comment_id):
     """ Update comments
 
         Parameters:
-            payload (dict): The payload of decoded valid token
             post_id (int): Id of post to which comment belong
             comment_id (int): Id of comment
 
@@ -119,7 +116,7 @@ def update_comments(payload, post_id, comment_id):
     comment = Comment.query.first_or_404(comment_id)
 
     # can update own comment only
-    if comment.user_id != payload.get('sub'):
+    if comment.user_id != auth_user_id():
         abort(403)
 
     # update comment
@@ -134,11 +131,10 @@ def update_comments(payload, post_id, comment_id):
 
 @comments.route("/posts/<int:post_id>/comments/<int:comment_id>", methods=['DELETE'])
 @requires_auth('delete:comments')
-def delete_comments(payload, post_id, comment_id):
+def delete_comments(post_id, comment_id):
     """ Delete comments
 
         Parameters:
-            payload (dict): The payload of decoded valid token
             post_id (int): Id of post on which comment was made
             comment_id (int): Id of comment
 
@@ -154,7 +150,7 @@ def delete_comments(payload, post_id, comment_id):
     comment = Comment.query.first_or_404(comment_id)
 
     # can delete own comment only
-    if comment.user_id != payload.get('sub'):
+    if comment.user_id != auth_user_id():
         abort(403)
 
     try:

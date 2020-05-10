@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 
-from limbook_api.auth.auth import requires_auth
+from limbook_api.auth.auth import requires_auth, auth_user_id
 from limbook_api.models.react import React
 
 reacts = Blueprint('reacts', __name__)
@@ -43,11 +43,10 @@ def get_all_reacts_in_json(post_id, user_id):
 # ====================================
 @reacts.route("/posts/<int:post_id>/reacts", methods=['GET'])
 @requires_auth('read:reacts')
-def get_reacts(payload, post_id):
+def get_reacts(post_id):
     """ Get all available reacts
 
         Parameters:
-             payload (dict): The payload of decoded valid token
              post_id (int): Id of post to which reacts belong to
 
         Returns:
@@ -64,11 +63,10 @@ def get_reacts(payload, post_id):
 @reacts.route("/posts/<int:post_id>/reacts/toggle", methods=['POST'])
 # TODO: fix caps on Create:reacts and use it
 @requires_auth('update:reacts')
-def create_reacts(payload, post_id):
+def create_reacts(post_id):
     """ Create new react or delete if exist
 
         Parameters:
-            payload (dict): The payload of decoded valid token
             post_id (int): Id of post to which react will belong
 
         Internal Parameters:
@@ -80,17 +78,17 @@ def create_reacts(payload, post_id):
             total_reacts (int)
     """
     try:
-        user_id = payload.get('sub')
+        user_id = auth_user_id()
         user_react = React.query.filter(
             React.post_id == post_id,
-            React.user_id == payload.get('sub')
+            React.user_id == auth_user_id()
         ).one_or_none()
 
         # toggle react
         if user_react is None:
             # create react
             react = React(**{
-                'user_id': payload.get('sub'),
+                'user_id': auth_user_id(),
                 'post_id': post_id
             })
 

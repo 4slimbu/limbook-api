@@ -1,67 +1,38 @@
-from unittest import TestCase, main
+from unittest import main
 
 from flask import json
 
-from limbook_api import create_app
-from limbook_api.config_test import Config
-from limbook_api.models.comment import create_random_comment
-from limbook_api.models.post import create_random_post
-from limbook_api.models.setup import db_drop_and_create_all
-
-test_user_id = "auth0|5eb66a2d1cc1ac0c1496c16f"
+from limbook_api.models.comment import create_comment
+from limbook_api.models.post import create_post
+from limbook_api.tests.base import BaseTestCase, test_user_id
 
 
-class CommentsTestCase(TestCase):
+class CommentsTestCase(BaseTestCase):
     """This class represents the test case for Comments"""
-
-    def setUp(self):
-        """Define test variables and initialize app."""
-        app = create_app(Config)
-        app.testing = True
-        client = app.test_client
-        self.app = app
-        self.client = client
-        # refresh database
-        db_drop_and_create_all()
-
-    def tearDown(self):
-        """Executed after reach test"""
-        pass
 
     # Comments Tests ----------------------------------------
     def test_cannot_access_comment_routes_without_correct_permission(self):
-        # given
-        headers = {'Authorization': self.app.config.get('NO_PERMISSION_TOKEN')}
-
-        # make request
-        # bypass actual token verification as we are interested in permission
-        # part only
-
         # get comments
         res1 = self.client().get(
-            '/posts/1/comments?mock_jwt_claim=True',
-            headers=headers
+            '/posts/1/comments?mock_token_verification=True'
         )
         data1 = json.loads(res1.data)
 
         # create comment
         res2 = self.client().post(
-            '/posts/1/comments?mock_jwt_claim=True',
-            headers=headers
+            '/posts/1/comments?mock_token_verification=True'
         )
         data2 = json.loads(res2.data)
 
         # update comment
         res3 = self.client().patch(
-            '/posts/1/comments/1?mock_jwt_claim=True',
-            headers=headers
+            '/posts/1/comments/1?mock_token_verification=True'
         )
         data3 = json.loads(res3.data)
 
         # delete comment
         res4 = self.client().delete(
-            '/posts/1/comments/1?mock_jwt_claim=True',
-            headers=headers
+            '/posts/1/comments/1?mock_token_verification=True'
         )
         data4 = json.loads(res4.data)
 
@@ -77,18 +48,17 @@ class CommentsTestCase(TestCase):
 
     def test_can_get_comments(self):
         # given
-        post = create_random_post()
-        comment = create_random_comment({
+        post = create_post()
+        comment = create_comment({
             "content": "New comment",
             "user_id": test_user_id,
             "post_id": post.id
         })
-        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
 
         # make request
         res = self.client().get(
-            '/posts/' + str(post.id) + '/comments?mock_jwt_claim=True',
-            headers=headers
+            '/posts/' + str(post.id) + '/comments'
+            + '?mock_token_verification=True&permission=read:comments'
         )
         data = json.loads(res.data)
 
@@ -98,15 +68,14 @@ class CommentsTestCase(TestCase):
 
     def test_can_create_comments(self):
         # given
-        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
-        post = create_random_post()
+        post = create_post()
         post_id = post.id
         comment = {"content": "My new Comment"}
 
         # make request
         res = self.client().post(
-            '/posts/' + str(post.id) + '/comments?mock_jwt_claim=True',
-            headers=headers,
+            '/posts/' + str(post.id) + '/comments'
+            + '?mock_token_verification=True&permission=create:comments',
             json=comment
         )
         data = json.loads(res.data)
@@ -125,9 +94,8 @@ class CommentsTestCase(TestCase):
 
     def test_can_update_comments(self):
         # given
-        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
-        post = create_random_post()
-        comment = create_random_comment({
+        post = create_post()
+        comment = create_comment({
             "content": "My new comment",
             "user_id": test_user_id,
             "post_id": post.id
@@ -138,8 +106,8 @@ class CommentsTestCase(TestCase):
 
         # make request
         res = self.client().patch(
-            '/posts/' + str(post.id) + '/comments/' + str(comment.id) + '?mock_jwt_claim=True',
-            headers=headers,
+            '/posts/' + str(post.id) + '/comments/' + str(comment.id)
+            + '?mock_token_verification=True&permission=update:comments',
             json=updated_comment_content
         )
         data = json.loads(res.data)
@@ -153,9 +121,8 @@ class CommentsTestCase(TestCase):
 
     def test_can_delete_comments(self):
         # given
-        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
-        post = create_random_post()
-        comment = create_random_comment({
+        post = create_post()
+        comment = create_comment({
             'content': 'My new comment',
             'user_id': test_user_id,
             'post_id': post.id
@@ -163,8 +130,8 @@ class CommentsTestCase(TestCase):
 
         # make request
         res = self.client().delete(
-            '/posts/' + str(post.id) + '/comments/' + str(comment.id) + '?mock_jwt_claim=True',
-            headers=headers
+            '/posts/' + str(post.id) + '/comments/' + str(comment.id)
+            + '?mock_token_verification=True&permission=delete:comments'
         )
         data = json.loads(res.data)
 

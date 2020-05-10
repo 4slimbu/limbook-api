@@ -5,7 +5,7 @@ from sqlalchemy import func
 from limbook_api.models.setup import db
 
 
-def create_random_comment(comment=None):
+def create_comment(comment=None):
     """Generates new comment with random attributes for testing
     """
     if comment:

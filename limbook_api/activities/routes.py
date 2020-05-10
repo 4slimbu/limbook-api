@@ -1,6 +1,6 @@
-from flask import Blueprint, jsonify, abort, request
+from flask import Blueprint, jsonify, abort
 
-from limbook_api.auth.auth import requires_auth
+from limbook_api.auth.auth import requires_auth, auth_user_id
 from limbook_api.models.activity import Activity
 
 activities = Blueprint('activities', __name__)
@@ -12,11 +12,11 @@ def validate_activity_data(data):
         abort(422)
 
 
-def get_all_activities_in_json(post_id):
+def get_all_activities_in_json(user_id):
     # get activities
-    activities = Activity.query.filter(Activity.post_id == post_id).all()
+    activities = Activity.query.filter(Activity.user_id == user_id).all()
     # get count
-    activities_count = Activity.query.filter(Activity.post_id == post_id).count()
+    activities_count = Activity.query.filter(Activity.user_id == user_id).count()
 
     # format
     data = []
@@ -36,73 +36,28 @@ def get_all_activities_in_json(post_id):
 # ====================================
 @activities.route("/activities", methods=['GET'])
 @requires_auth('read:activities')
-def get_activities(payload, post_id):
+def get_activities():
     """ Get all available activities
 
-        Parameters:
-             payload (dict): The payload of decoded valid token
-             post_id (int): Id of post to which activities belong to
-
         Returns:
             success (boolean)
             activities (list)
             total_activities (int)
     """
     try:
-        return get_all_activities_in_json(post_id)
-    except Exception as e:
-        abort(400)
-
-
-@activities.route("/activities", methods=['POST'])
-@requires_auth('create:activities')
-def create_activities(payload, post_id):
-    """ Create new activities
-
-        Parameters:
-            payload (dict): The payload of decoded valid token
-            post_id (int): Id of post to which activity will belong
-
-        Internal Parameters:
-            content (string): Content for the activity
-            user_id (string): Internal parameter extracted from current_user
-
-        Returns:
-            success (boolean)
-            activities (list)
-            total_activities (int)
-    """
-    # vars
-    data = request.get_json()
-
-    validate_activity_data(data)
-
-    # create activity
-    activity = Activity(**{
-        'content': data.get('content'),
-        'user_id': payload.get('sub'),
-        'post_id': post_id
-    })
-
-    try:
-        activity.insert()
-        return get_all_activities_in_json(post_id)
+        user_id = auth_user_id()
+        return get_all_activities_in_json(user_id)
     except Exception as e:
         abort(400)
 
 
 @activities.route("/activities/<int:activity_id>", methods=['DELETE'])
 @requires_auth('delete:activities')
-def delete_activities(payload, post_id, activity_id):
+def delete_activities(activity_id):
     """ Delete activities
 
         Parameters:
-            payload (dict): The payload of decoded valid token
-            post_id (int): Id of post on which activity was made
             activity_id (int): Id of activity
-
-        Internal Parameters:
-            user_id (string): Internal parameter extracted from current_user
 
         Returns:
             success (boolean)
@@ -113,7 +68,7 @@ def delete_activities(payload, post_id, activity_id):
     activity = Activity.query.first_or_404(activity_id)
 
     # can delete own activity only
-    if activity.user_id != payload.get('sub'):
+    if activity.user_id != auth_user_id():
         abort(403)
 
     try:

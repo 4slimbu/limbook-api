@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 
-from limbook_api.auth.auth import requires_auth
+from limbook_api.auth.auth import requires_auth, auth_user_id
 from limbook_api.models.post import Post
 
 posts = Blueprint('posts', __name__)
@@ -36,10 +36,8 @@ def get_all_posts_in_json():
 # ====================================
 @posts.route("/posts", methods=['GET'])
 @requires_auth('read:posts')
-def get_posts(payload):
+def get_posts():
     """ Get all available posts
-
-        Parameters (dict): The payload of decoded valid token
 
         Returns:
             success (boolean)
@@ -54,11 +52,8 @@ def get_posts(payload):
 
 @posts.route("/posts", methods=['POST'])
 @requires_auth('create:posts')
-def create_posts(payload):
+def create_posts():
     """ Create new posts
-
-        Parameters:
-            payload (dict): The payload of decoded valid token
 
         Internal Parameters:
             content (string): Content for the post
@@ -77,7 +72,7 @@ def create_posts(payload):
     # create post
     post = Post(**{
         'content': data.get('content'),
-        'user_id': payload.get('sub')
+        'user_id': auth_user_id()
     })
 
     try:
@@ -89,11 +84,10 @@ def create_posts(payload):
 
 @posts.route("/posts/<int:post_id>", methods=['PATCH'])
 @requires_auth('update:posts')
-def update_posts(payload, post_id):
+def update_posts(post_id):
     """ Update posts
 
         Parameters:
-            payload (dict): The payload of decoded valid token
             post_id (int): Id of post
 
         Internal Parameters:
@@ -114,7 +108,7 @@ def update_posts(payload, post_id):
     post = Post.query.first_or_404(post_id)
 
     # can update own post only
-    if post.user_id != payload.get('sub'):
+    if post.user_id != auth_user_id():
         abort(403)
 
     # update post
@@ -126,13 +120,13 @@ def update_posts(payload, post_id):
     except Exception as e:
         abort(400)
 
+
 @posts.route("/posts/<int:post_id>", methods=['DELETE'])
 @requires_auth('delete:posts')
-def delete_posts(payload, post_id):
+def delete_posts(post_id):
     """ Delete posts
 
         Parameters:
-            payload (dict): The payload of decoded valid token
             post_id (int): Id of post
 
         Internal Parameters:
@@ -146,7 +140,7 @@ def delete_posts(payload, post_id):
     post = Post.query.first_or_404(post_id)
 
     # can delete own post only
-    if post.user_id != payload.get('sub'):
+    if post.user_id != auth_user_id():
         abort(403)
 
     try:

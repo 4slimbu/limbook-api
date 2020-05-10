@@ -1,52 +1,27 @@
-from unittest import TestCase, main
+from unittest import main
 
 from flask import json
 
-from limbook_api import create_app
-from limbook_api.config_test import Config
-from limbook_api.models.post import create_random_post
-from limbook_api.models.setup import db_drop_and_create_all
-
-test_user_id = "auth0|5eb66a2d1cc1ac0c1496c16f"
+from limbook_api.models.post import create_post
+from limbook_api.tests.base import BaseTestCase
 
 
-class ReactsTestCase(TestCase):
+class ReactsTestCase(BaseTestCase):
     """This class represents the test case for Reacts"""
-
-    def setUp(self):
-        """Define test variables and initialize app."""
-        app = create_app(Config)
-        app.testing = True
-        client = app.test_client
-        self.app = app
-        self.client = client
-        # refresh database
-        db_drop_and_create_all()
-
-    def tearDown(self):
-        """Executed after reach test"""
-        pass
 
     # Reacts Tests ----------------------------------------
     def test_cannot_access_react_routes_without_correct_permission(self):
-        # given
-        headers = {'Authorization': self.app.config.get('NO_PERMISSION_TOKEN')}
-
-        # make request
-        # bypass actual token verification as we are interested in permission
-        # part only
-
         # get reacts
         res1 = self.client().get(
-            '/posts/1/reacts?mock_jwt_claim=True',
-            headers=headers
+            '/posts/1/reacts'
+            + '?mock_token_verification=True'
         )
         data1 = json.loads(res1.data)
 
         # toggle react
         res2 = self.client().post(
-            '/posts/1/reacts/toggle?mock_jwt_claim=True',
-            headers=headers
+            '/posts/1/reacts/toggle'
+            + '?mock_token_verification=True'
         )
         data2 = json.loads(res2.data)
 
@@ -58,14 +33,13 @@ class ReactsTestCase(TestCase):
 
     def test_can_toggle_reacts(self):
         # given
-        post = create_random_post()
+        post = create_post()
         post_id = post.id
-        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
 
         # make request
         res = self.client().post(
-            '/posts/' + str(post_id) + '/reacts/toggle?mock_jwt_claim=True',
-            headers=headers
+            '/posts/' + str(post_id) + '/reacts/toggle'
+            + '?mock_token_verification=True&permission=update:reacts'
         )
         data = json.loads(res.data)
 
@@ -76,8 +50,8 @@ class ReactsTestCase(TestCase):
 
         # make request
         res = self.client().post(
-            '/posts/' + str(post_id) + '/reacts/toggle?mock_jwt_claim=True',
-            headers=headers
+            '/posts/' + str(post_id) + '/reacts/toggle'
+            + '?mock_token_verification=True&permission=update:reacts'
         )
         data = json.loads(res.data)
 

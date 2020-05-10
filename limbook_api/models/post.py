@@ -4,7 +4,7 @@ from random import randint
 from limbook_api.models.setup import db
 
 
-def create_random_post(post=None):
+def create_post(post=None):
     """Generates new post with random attributes for testing
     """
     if post:

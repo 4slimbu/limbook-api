@@ -11,7 +11,7 @@ def home():
 
 
 @main.route("/secure-route")
-@requires_auth('create:posts')
-def secure(payload):
+@requires_auth('read:secure_route')
+def secure():
     return 'Secure location accessed'
 
