@@ -11,7 +11,7 @@ class Config:
 
     # Configure SQLAlchemy and database
     # SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    SQLALCHEMY_DATABASE_URI = "postgres://postgres:password@localhost:5432/limbook_api_test"
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
 
