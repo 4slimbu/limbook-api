@@ -6,6 +6,8 @@ from flask_seeder import FlaskSeeder
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+migrate = Migrate(compare_type=True)
+flask_seeder = FlaskSeeder()
 
 
 def setup_db(app):
@@ -14,10 +16,10 @@ def setup_db(app):
     db.init_app(app)
 
     # setup migration
-    Migrate(app, db)
+    migrate.init_app(app, db)
 
     # setup flask seed
-    FlaskSeeder(app, db)
+    flask_seeder.init_app(app, db)
 
 
 def db_drop_and_create_all():
@@ -43,7 +45,7 @@ class Post(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String, nullable=False)
 
     """
     insert()
