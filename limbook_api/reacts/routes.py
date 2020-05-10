@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.auth.auth import requires_auth
-from limbook_api.db.model import React
+from limbook_api.models.react import React
 
 reacts = Blueprint('reacts', __name__)
 

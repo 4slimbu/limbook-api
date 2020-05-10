@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from limbook_api.config import Config
 from limbook_api.errors.handlers import AuthError
-from limbook_api.db.model import setup_db
+from limbook_api.models.setup import setup_db
 
 db = SQLAlchemy()
 
