@@ -6,6 +6,8 @@ from flask_seeder import FlaskSeeder
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+migrate = Migrate(compare_type=True)
+flask_seeder = FlaskSeeder()
 
 
 def setup_db(app):
@@ -14,10 +16,10 @@ def setup_db(app):
     db.init_app(app)
 
     # setup migration
-    Migrate(app, db)
+    migrate.init_app(app, db)
 
     # setup flask seed
-    FlaskSeeder(app, db)
+    flask_seeder.init_app(app, db)
 
 
 def db_drop_and_create_all():
@@ -26,13 +28,16 @@ def db_drop_and_create_all():
     db.create_all()
 
 
-def create_random_post():
+def create_random_post(post=None):
     """Generates new post with random attributes for testing
     """
-    post = Post(**{
-        'content': 'Drink ' + str(randint(1000, 9999)),
-        'user_id': str(randint(1000, 9999))
-    })
+    if post:
+        post = Post(**post)
+    else:
+        post = Post(**{
+            'content': 'Post ' + str(randint(1000, 9999)),
+            'user_id': str(randint(1000, 9999))
+        })
 
     post.insert()
     return post
@@ -43,7 +48,7 @@ class Post(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String, nullable=False)
 
     """
     insert()
@@ -80,5 +85,16 @@ class Post(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    """
+    format()
+        format the data for the api
+    """
+    def format(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'user_id': self.user_id,
+        }
+
     def __repr__(self):
-        return json.dumps(self.short())
+        return json.dumps(self.format())

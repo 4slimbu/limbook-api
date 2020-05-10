@@ -7,7 +7,7 @@ from limbook_api.config_test import Config
 
 
 class AuthTestCase(TestCase):
-    """This class represents the trivia test case"""
+    """This class represents the test case for Authenticaiton"""
 
     def setUp(self):
         """Define test variables and initialize app."""
@@ -59,20 +59,20 @@ class AuthTestCase(TestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'invalid_header')
 
-    # def test_cannot_access_protected_route_with_expired_token(self):
-    #     # given
-    #     headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
-    #
-    #     # make request
-    #     res = self.client().get(
-    #         '/secure-route',
-    #         headers=headers
-    #     )
-    #     data = json.loads(res.data)
-    #
-    #     # assert
-    #     self.assertEqual(res.status_code, 401)
-    #     self.assertEqual(data.get('error_code'), 'token_expired')
+    def test_cannot_access_protected_route_with_expired_token(self):
+        # given
+        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
+
+        # make request
+        res = self.client().get(
+            '/secure-route',
+            headers=headers
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'token_expired')
 
     def test_cannot_access_protected_route_without_correct_permission(self):
         # given
