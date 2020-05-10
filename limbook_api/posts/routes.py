@@ -12,6 +12,25 @@ def validate_post_data(data):
         abort(422)
 
 
+def get_all_posts_in_json():
+    # get posts
+    posts = Post.query.all()
+    # get count
+    posts_count = Post.query.count()
+
+    # format
+    data = []
+    for post in posts:
+        data.append(post.format())
+
+    # return the result
+    return jsonify({
+        'success': True,
+        'posts': data,
+        'posts_count': posts_count
+    })
+
+
 # ====================================
 # ROUTES
 # ====================================
@@ -28,22 +47,7 @@ def get_posts(payload):
             total_posts (int)
     """
     try:
-        # get posts
-        posts = Post.query.all()
-        # get count
-        posts_count = Post.query.count()
-
-        # format
-        data = []
-        for post in posts:
-            data.append(post.format())
-
-        # return the result
-        return jsonify({
-            'success': True,
-            'posts': data,
-            'posts_count': posts_count
-        })
+        return get_all_posts_in_json()
     except Exception as e:
         abort(400)
 
@@ -78,22 +82,78 @@ def create_posts(payload):
 
     try:
         post.insert()
+        return get_all_posts_in_json()
+    except Exception as e:
+        abort(400)
 
-        # get posts
-        posts = Post.query.all()
-        # get count
-        posts_count = Post.query.count()
 
-        # format
-        data = []
-        for post in posts:
-            data.append(post.format())
+@posts.route("/posts/<int:post_id>", methods=['PATCH'])
+@requires_auth('update:posts')
+def update_posts(payload, post_id):
+    """ Update posts
 
-        # return the result
+        Parameters:
+            payload (dict): The payload of decoded valid token
+            post_id (int): Id of post
+
+        Internal Parameters:
+            content (string): Content for the post
+            user_id (string): Internal parameter extracted from current_user
+
+        Returns:
+            success (boolean)
+            posts (list)
+            total_posts (int)
+    """
+    # vars
+    data = request.get_json()
+
+    validate_post_data(data)
+
+    # get post
+    post = Post.query.first_or_404(post_id)
+
+    # can update own post only
+    if post.user_id != payload.get('sub'):
+        abort(403)
+
+    # update post
+    post.content = data.get('content')
+
+    try:
+        post.update()
+        return get_all_posts_in_json()
+    except Exception as e:
+        abort(400)
+
+@posts.route("/posts/<int:post_id>", methods=['DELETE'])
+@requires_auth('delete:posts')
+def delete_posts(payload, post_id):
+    """ Delete posts
+
+        Parameters:
+            payload (dict): The payload of decoded valid token
+            post_id (int): Id of post
+
+        Internal Parameters:
+            user_id (string): Internal parameter extracted from current_user
+
+        Returns:
+            success (boolean)
+            deleted_post (dict)
+    """
+    # vars
+    post = Post.query.first_or_404(post_id)
+
+    # can delete own post only
+    if post.user_id != payload.get('sub'):
+        abort(403)
+
+    try:
+        post.delete()
         return jsonify({
-            'success': True,
-            'posts': data,
-            'posts_count': posts_count
+            "success": True,
+            "deleted_post": post.format()
         })
     except Exception as e:
         abort(400)

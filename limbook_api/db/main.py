@@ -28,13 +28,16 @@ def db_drop_and_create_all():
     db.create_all()
 
 
-def create_random_post():
+def create_random_post(post=None):
     """Generates new post with random attributes for testing
     """
-    post = Post(**{
-        'content': 'Drink ' + str(randint(1000, 9999)),
-        'user_id': str(randint(1000, 9999))
-    })
+    if post:
+        post = Post(**post)
+    else:
+        post = Post(**{
+            'content': 'Post ' + str(randint(1000, 9999)),
+            'user_id': str(randint(1000, 9999))
+        })
 
     post.insert()
     return post

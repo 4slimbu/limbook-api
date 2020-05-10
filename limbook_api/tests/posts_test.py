@@ -32,16 +32,44 @@ class PostsTestCase(TestCase):
         # make request
         # bypass actual token verification as we are interested in permission
         # part only
-        res1 = self.client().get('/posts?mock_jwt_claim=True', headers=headers)
+
+        # get posts
+        res1 = self.client().get(
+            '/posts?mock_jwt_claim=True',
+            headers=headers
+        )
         data1 = json.loads(res1.data)
-        res2 = self.client().post('/posts?mock_jwt_claim=True', headers=headers)
+
+        # create post
+        res2 = self.client().post(
+            '/posts?mock_jwt_claim=True',
+            headers=headers
+        )
         data2 = json.loads(res2.data)
+
+        # update post
+        res3 = self.client().patch(
+            '/posts/1?mock_jwt_claim=True',
+            headers=headers
+        )
+        data3 = json.loads(res3.data)
+
+        # delete post
+        res4 = self.client().delete(
+            '/posts/1?mock_jwt_claim=True',
+            headers=headers
+        )
+        data4 = json.loads(res4.data)
 
         # assert
         self.assertEqual(res1.status_code, 401)
         self.assertEqual(data1.get('error_code'), 'no_permission')
         self.assertEqual(res2.status_code, 401)
         self.assertEqual(data2.get('error_code'), 'no_permission')
+        self.assertEqual(res3.status_code, 401)
+        self.assertEqual(data3.get('error_code'), 'no_permission')
+        self.assertEqual(res4.status_code, 401)
+        self.assertEqual(data4.get('error_code'), 'no_permission')
 
     def test_can_get_posts(self):
         # given
@@ -80,29 +108,50 @@ class PostsTestCase(TestCase):
             'auth0|5eb66a2d1cc1ac0c1496c16f'
         )
 
-    def test_can_create_posts(self):
+    def test_can_update_posts(self):
         # given
         headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
-        post = {
-            "content": "My new Post"
+        post = create_random_post({
+            "content": "My new post",
+            "user_id": 'auth0|5eb66a2d1cc1ac0c1496c16f'
+        })
+        updated_post_content = {
+            "content": "My Updated Content"
         }
 
         # make request
-        res = self.client().post(
-            '/posts?mock_jwt_claim=True',
+        res = self.client().patch(
+            '/posts/' + str(post.id) + '?mock_jwt_claim=True',
             headers=headers,
-            json=post
+            json=updated_post_content
         )
         data = json.loads(res.data)
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data.get('posts')[0]['content'], post['content'])
-        # id of user from token we are using: auth0|5eb66a2d1cc1ac0c1496c16f
         self.assertEqual(
-            data.get('posts')[0]['user_id'],
-            'auth0|5eb66a2d1cc1ac0c1496c16f'
+            data.get('posts')[0]['content'],
+            updated_post_content['content']
         )
+
+    def test_can_delete_posts(self):
+        # given
+        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
+        post = create_random_post({
+            'content': 'My new post',
+            'user_id': 'auth0|5eb66a2d1cc1ac0c1496c16f'
+        })
+
+        # make request
+        res = self.client().delete(
+            '/posts/' + str(post.id) + '?mock_jwt_claim=True',
+            headers=headers
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data.get('deleted_post'), post.format())
 
 
 # Make the tests conveniently executable
