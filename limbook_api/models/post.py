@@ -1,7 +1,7 @@
 from flask import json
 from random import randint
 
-from limbook_api.setup_db import db
+from limbook_api.models import db
 
 
 def create_post(post=None):

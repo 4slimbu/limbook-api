@@ -46,3 +46,18 @@ flask seed run
 ```shell script
 python -m unittest tests/app_test.py
 ```
+
+# Debugging with python interpreter
+```
+# in the command line
+python
+
+# inside python interpreter set app context
+from run import app
+
+# now you can test and try
+from limbook_api.setup_db import db
+from limbook_api.models import Post
+post = Post(user_id="id",content="my post")
+db.session.add(post)
+```
