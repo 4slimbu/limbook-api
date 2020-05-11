@@ -2,7 +2,7 @@ from flask import json
 from random import randint
 from sqlalchemy import func
 
-from limbook_api.models.setup import db
+from limbook_api.setup_db import db
 
 
 def create_activity(activity=None):
@@ -40,7 +40,7 @@ class Activity(db.Model):
     user_id = db.Column(db.String, nullable=False)
     post_id = db.Column(db.Integer, nullable=False)
     action = db.Column(
-        db.Enum('commented', 'reacted', 'created', 'updated', 'deleted'),
+        db.Enum('commented', 'reacted', 'created', 'updated', 'deleted', name="actions"),
         nullable=False
     )
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())

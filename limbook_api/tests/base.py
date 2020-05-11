@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from limbook_api import create_app
 from limbook_api.config_test import Config
-from limbook_api.models.setup import db_drop_and_create_all
+from limbook_api.setup_db import db_drop_and_create_all
 
 test_user_id = "auth0|5eb66a2d1cc1ac0c1496c16f"
 

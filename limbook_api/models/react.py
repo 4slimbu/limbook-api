@@ -1,7 +1,7 @@
 from flask import json
 from random import randint
 
-from limbook_api.models.setup import db
+from limbook_api.setup_db import db
 
 
 def create_react(react=None):

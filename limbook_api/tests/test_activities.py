@@ -2,8 +2,8 @@ from unittest import main
 
 from flask import json
 
-from limbook_api.models.activity import create_activity
-from limbook_api.models.post import create_post
+from limbook_api.models import create_activity
+from limbook_api.models import create_post
 from limbook_api.tests.base import BaseTestCase, test_user_id
 
 

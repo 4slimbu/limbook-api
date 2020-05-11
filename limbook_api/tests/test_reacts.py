@@ -2,7 +2,7 @@ from unittest import main
 
 from flask import json
 
-from limbook_api.models.post import create_post
+from limbook_api.models import create_post
 from limbook_api.tests.base import BaseTestCase
 
 

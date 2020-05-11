@@ -2,7 +2,7 @@ from flask import json
 from random import randint
 from sqlalchemy import func
 
-from limbook_api.models.setup import db
+from limbook_api.setup_db import db
 
 
 def create_comment(comment=None):

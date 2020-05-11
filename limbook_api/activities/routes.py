@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort
 
 from limbook_api.auth.auth import requires_auth, auth_user_id
-from limbook_api.models.activity import Activity
+from limbook_api.models import Activity
 
 activities = Blueprint('activities', __name__)
 
