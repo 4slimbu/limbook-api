@@ -18,7 +18,7 @@ Export secrets
 ```shell script
 # in .bash_profile add these lines
 export SECRET_KEY='my_secret_key' #any random string
-export SQLALCHEMY_DATABASE_URI='sqlite:///site.db' #models path
+export SQLALCHEMY_DATABASE_URI='sqlite:///site.db' #db path
 # source .bash_profile
 $ source ~/.bash_profile
 ```

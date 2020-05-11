@@ -1,6 +1,6 @@
 from flask import json
 
-from limbook_api.models import db
+from limbook_api.db import db
 
 
 class Image(db.Model):
