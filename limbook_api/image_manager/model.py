@@ -1,65 +1,49 @@
+from random import randint
+
 from flask import json
 
-from limbook_api.db import db
+from limbook_api.db import db, BaseDbModel
 
 
-class Image(db.Model):
+def create_image(image=None, user_id=None):
+    """Generates new image with random attributes for testing
+    """
+    if image:
+        image = Image(**image)
+    else:
+        rand_user_id = 'auth0|' + str(randint(1000, 9999))
+        image = Image(**{
+            'user_id': user_id if user_id else rand_user_id,
+            'url': json.dumps({
+                "thumb": "thumb-" + str(randint(1000, 9999)) + '.jpg',
+                "medium": "medium-" + str(randint(1000, 9999)) + '.jpg',
+                "large": "large-" + str(randint(1000, 9999)) + '.jpg'
+            })
+        })
+
+    image.insert()
+    return image
+
+
+class Image(BaseDbModel):
     """Images"""
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    post_id = db.Column(
-        db.Integer,
-        db.ForeignKey('post.id', ondelete="cascade"),
-        nullable=False
-    )
-    post = db.relationship('Post', backref=db.backref(
-        'images', lazy=True, cascade="all, delete"))
-    """
-    insert()
-        inserts a new image into a database
-        EXAMPLE
-            image = Image(content=req_title, post_id=req_recipe)
-            image.insert()
-    """
-    def insert(self):
-        db.session.add(self)
-        db.session.commit()
+    # owner id
+    user_id = db.Column(db.String, nullable=False)
+    # list of full path of image set (thumbnail, medium, large, full)
+    url = db.Column(db.String, nullable=False)
 
     """
-    update()
-        updates image in the database
-        the model must exist in the database
-        EXAMPLE
-            image = Image.query.filter(Image.id == id).one_or_none()
-            image.content = 'New Content'
-            image.update()
-    """
-    def update(self):
-        db.session.commit()
+        format()
+            format the data for the api
+        """
 
-    """
-    delete()
-        deletes a image from the database
-        the model must exist in the database
-        EXAMPLE
-            image = Image(content=req_title, post_id=req_recipe)
-            image.delete()
-    """
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
-    """
-    format()
-        format the data for the api
-    """
     def format(self):
         return {
             'id': self.id,
-            'name': self.name,
-            'post_id': self.post_id,
+            'user_id': self.user_id,
+            'url': json.loads(self.url),
+            'created_on': self.created_on.__str__(),
+            'updated_on': self.updated_on.__str__()
         }
-
-    def __repr__(self):
-        return json.dumps(self.format())

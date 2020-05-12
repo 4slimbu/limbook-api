@@ -1,22 +1,22 @@
-from flask import Blueprint, jsonify, abort, request
+from flask import Blueprint, jsonify, abort, request, json
 
 from limbook_api.auth import requires_auth, auth_user_id
-from limbook_api.image_manager import Image
+from limbook_api.image_manager import Image, create_img_set, delete_image_set
 
-images = Blueprint('images', __name__)
+image_manager = Blueprint('image_manager', __name__)
 
 
 def validate_image_data(data):
     # check if image attributes are present
-    if not data.get('content'):
+    if not data.get('image'):
         abort(422)
 
 
-def get_all_images_in_json(post_id):
+def get_all_user_images_in_json():
     # get images
-    images = Image.query.filter(Image.post_id == post_id).all()
+    images = Image.query.filter(Image.user_id == auth_user_id()).all()
     # get count
-    images_count = Image.query.filter(Image.post_id == post_id).count()
+    images_count = Image.query.filter(Image.user_id == auth_user_id()).count()
 
     # format
     data = []
@@ -34,112 +34,96 @@ def get_all_images_in_json(post_id):
 # ====================================
 # ROUTES
 # ====================================
-@images.route("/posts/<int:post_id>/images", methods=['GET'])
+@image_manager.route("/images", methods=['GET'])
 @requires_auth('read:images')
-def get_images(post_id):
-    """ Get all available images
-
-        Parameters:
-             post_id (int): Id of post to which images belong to
+def get_images():
+    """ Update images
 
         Returns:
             success (boolean)
-            images (list)
-            total_images (int)
+            images (list): List of images
+            images_count (int)
     """
+
     try:
-        return get_all_images_in_json(post_id)
+        # return the result
+        return get_all_user_images_in_json()
     except Exception as e:
         abort(400)
 
 
-@images.route("/posts/<int:post_id>/images", methods=['POST'])
-@requires_auth('create:images')
-def create_images(post_id):
-    """ Create new images
+@image_manager.route("/images/<int:image_id>", methods=['GET'])
+@requires_auth('read:images')
+def get_image(image_id):
+    """ Update images
 
         Parameters:
-            post_id (int): Id of post to which image will belong
-
-        Internal Parameters:
-            content (string): Content for the image
-            user_id (string): Internal parameter extracted from current_user
+            image_id (int): Id of image
 
         Returns:
             success (boolean)
-            images (list)
-            total_images (int)
+            image (dist)
+    """
+    # get image
+    image = Image.query.first_or_404(image_id)
+
+    # can retrieve own image only
+    if image.user_id != auth_user_id():
+        abort(403)
+
+    try:
+        # return the result
+        return jsonify({
+            'success': True,
+            'image': image.format()
+        })
+    except Exception as e:
+        abort(400)
+
+
+@image_manager.route("/images", methods=['POST'])
+@requires_auth('create:images')
+def create_images():
+    """ Create new images
+
+        Internal Parameters:
+            image (FileStorage): Image
+
+        Returns:
+            success (boolean)
+            image (list)
     """
     # vars
-    data = request.get_json()
+    image_file = request.files.get('image')
 
-    validate_image_data(data)
+    validate_image_data({"image": image_file})
+
+    image_url_set = create_img_set(image_file)
 
     # create image
     image = Image(**{
-        'content': data.get('content'),
-        'user_id': auth_user_id(),
-        'post_id': post_id
+        "user_id": auth_user_id(),
+        "url": json.dumps(image_url_set)
     })
 
     try:
         image.insert()
-        return get_all_images_in_json(post_id)
+        # return the result
+        return jsonify({
+            'success': True,
+            'image': image.format()
+        })
     except Exception as e:
         abort(400)
 
 
-@images.route("/posts/<int:post_id>/images/<int:image_id>", methods=['PATCH'])
-@requires_auth('update:images')
-def update_images(post_id, image_id):
-    """ Update images
-
-        Parameters:
-            post_id (int): Id of post to which image belong
-            image_id (int): Id of image
-
-        Internal Parameters:
-            content (string): Content for the image
-            user_id (string): Internal parameter extracted from current_user
-
-        Returns:
-            success (boolean)
-            images (list)
-            total_images (int)
-    """
-    # vars
-    data = request.get_json()
-
-    validate_image_data(data)
-
-    # get image
-    image = Image.query.first_or_404(image_id)
-
-    # can update own image only
-    if image.user_id != auth_user_id():
-        abort(403)
-
-    # update image
-    image.content = data.get('content')
-
-    try:
-        image.update()
-        return get_all_images_in_json(post_id)
-    except Exception as e:
-        abort(400)
-
-
-@images.route("/posts/<int:post_id>/images/<int:image_id>", methods=['DELETE'])
+@image_manager.route("/images/<int:image_id>", methods=['DELETE'])
 @requires_auth('delete:images')
-def delete_images(post_id, image_id):
+def delete_images(image_id):
     """ Delete images
 
         Parameters:
-            post_id (int): Id of post on which image was made
             image_id (int): Id of image
-
-        Internal Parameters:
-            user_id (string): Internal parameter extracted from current_user
 
         Returns:
             success (boolean)
@@ -155,9 +139,11 @@ def delete_images(post_id, image_id):
 
     try:
         image.delete()
+        deleted_image = image.format()
+        delete_image_set(deleted_image.get('url'))
         return jsonify({
             "success": True,
-            "deleted_image": image.format()
+            "deleted_image": deleted_image
         })
     except Exception as e:
         abort(400)

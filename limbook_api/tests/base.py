@@ -1,7 +1,9 @@
+import os
+import shutil
 from unittest import TestCase
 
 from limbook_api import create_app
-from limbook_api.config_test import Config
+from limbook_api.config_test import TestConfig
 from limbook_api.db import db_drop_and_create_all
 
 test_user_id = "auth0|5eb66a2d1cc1ac0c1496c16f"
@@ -35,7 +37,7 @@ class BaseTestCase(TestCase):
 
     def setUp(self):
         """Define test variables and initialize app."""
-        app = create_app(Config)
+        app = create_app(TestConfig)
         app.testing = True
         client = app.test_client
         self.app = app
@@ -43,6 +45,10 @@ class BaseTestCase(TestCase):
         # refresh database
         db_drop_and_create_all()
 
+
     def tearDown(self):
         """Executed after reach test"""
-        pass
+        # refresh image test dir
+        test_img_dir = self.app.root_path + '/' + TestConfig.IMG_UPLOAD_DIR
+        if os.path.isdir(test_img_dir):
+            shutil.rmtree(self.app.root_path + '/' + TestConfig.IMG_UPLOAD_DIR)
