@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.auth import requires_auth, auth_user_id
+from limbook_api.image_manager import Image
 from limbook_api.posts import Post
 
 posts = Blueprint('posts', __name__)
@@ -10,6 +11,19 @@ def validate_post_data(data):
     # check if post attributes are present
     if not data.get('content'):
         abort(422)
+
+
+def get_images_list_using_ids(image_ids):
+    images = []
+    for image_id in image_ids:
+        image = Image.query.filter(
+            Image.id == image_id,
+            Image.user_id == auth_user_id()
+        ).first_or_404()
+
+        images.append(image)
+
+    return images
 
 
 def get_all_posts_in_json():
@@ -148,6 +162,44 @@ def delete_posts(post_id):
         return jsonify({
             "success": True,
             "deleted_post": post.format()
+        })
+    except Exception as e:
+        abort(400)
+
+
+@posts.route("/posts/<int:post_id>/images", methods=['POST'])
+@requires_auth('update:posts')
+def attach_images_to_post(post_id):
+    """ Attach images to post
+
+        Parameters:
+            post_id (int): Id of post
+
+        Internal Parameters:
+            image_ids (list): List of image ids
+
+        Returns:
+            success (boolean)
+            post (dict)
+    """
+    # vars
+    post = Post.query.first_or_404(post_id)
+
+    # can attach images to own post only
+    if post.user_id != auth_user_id():
+        abort(403)
+
+    # attach images
+    data = request.get_json()
+    image_ids = data.get('image_ids')
+    images = get_images_list_using_ids(image_ids)
+
+    try:
+        post.images = images
+        post.update()
+        return jsonify({
+            "success": True,
+            "post": post.format()
         })
     except Exception as e:
         abort(400)

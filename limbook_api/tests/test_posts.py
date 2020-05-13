@@ -2,6 +2,7 @@ from unittest import main
 
 from flask import json
 
+from limbook_api.image_manager import create_image
 from limbook_api.posts import create_post
 from limbook_api.tests.base import BaseTestCase, test_user_id
 
@@ -31,6 +32,11 @@ class PostsTestCase(BaseTestCase):
             '/posts/1?mock_token_verification=True')
         data4 = json.loads(res4.data)
 
+        # attach image to post
+        res5 = self.client().post(
+            '/posts/1/images?mock_token_verification=True')
+        data5 = json.loads(res5.data)
+
         # assert
         self.assertEqual(res1.status_code, 401)
         self.assertEqual(data1.get('error_code'), 'no_permission')
@@ -40,6 +46,8 @@ class PostsTestCase(BaseTestCase):
         self.assertEqual(data3.get('error_code'), 'no_permission')
         self.assertEqual(res4.status_code, 401)
         self.assertEqual(data4.get('error_code'), 'no_permission')
+        self.assertEqual(res5.status_code, 401)
+        self.assertEqual(data5.get('error_code'), 'no_permission')
 
     def test_can_get_posts(self):
         # given
@@ -119,6 +127,55 @@ class PostsTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('deleted_post'), post.format())
+
+    def test_cannot_add_others_images_to_post(self):
+        """ Cannot add other user's images to own post
+
+        Other user's image should not be accessible
+        to current user and hence should not be able to
+        assign it to own posts
+        """
+        # given
+        post = create_post(user_id=test_user_id)
+        image1 = create_image()
+        image2 = create_image()
+        data = {
+            "image_ids": [image1.id, image2.id]
+        }
+
+        # make request
+        res = self.client().post(
+            '/posts/' + str(post.id) + '/images'
+            + '?mock_token_verification=True&permission=update:posts',
+            json=data
+        )
+
+        # assert
+        self.assertEqual(res.status_code, 404)
+
+    def test_can_add_own_images_to_post(self):
+        # given
+        post = create_post(user_id=test_user_id)
+        image1 = create_image(user_id=test_user_id)
+        image2 = create_image(user_id=test_user_id)
+        data = {
+            "image_ids": [image1.id, image2.id]
+        }
+
+        # make request
+        res = self.client().post(
+            '/posts/' + str(post.id) + '/images'
+            + '?mock_token_verification=True&permission=update:posts',
+            json=data
+        )
+
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data.get('success'), True)
+        self.assertEqual(data.get('post').get('images')[0], image1.format())
+        self.assertEqual(data.get('post').get('images')[1], image2.format())
 
 
 # Make the tests conveniently executable
