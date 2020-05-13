@@ -1,9 +1,9 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from limbook_api.config import Config
-from limbook_api.errors import AuthError, ImageUploadError
 from limbook_api.db import setup_db
+from limbook_api.errors import AuthError, ImageUploadError
 from limbook_api.errors.error_handlers import register_error_handlers
 
 db = SQLAlchemy()
@@ -38,7 +38,3 @@ def create_app(config_class=Config):
 
     # return flask app
     return app
-
-
-
-

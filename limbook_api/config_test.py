@@ -1,5 +1,3 @@
-import os
-
 from limbook_api import Config
 
 

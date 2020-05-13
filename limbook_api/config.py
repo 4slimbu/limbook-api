@@ -1,6 +1,3 @@
-import os
-
-
 class Config:
     # Enable debug mode
     DEBUG = True

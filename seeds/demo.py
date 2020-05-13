@@ -1,7 +1,7 @@
 from faker import Faker as Generator
 from flask_seeder import Seeder
 
-from limbook_api.models import create_post
+from limbook_api.posts import create_post
 from limbook_api.db import db_drop_and_create_all
 
 generator = Generator()

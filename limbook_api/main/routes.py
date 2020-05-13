@@ -14,4 +14,3 @@ def home():
 @requires_auth('read:secure_route')
 def secure():
     return 'Secure location accessed'
-
