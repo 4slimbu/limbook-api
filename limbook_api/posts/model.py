@@ -90,7 +90,8 @@ class Post(db.Model):
             'id': self.id,
             'content': self.content,
             'user_id': self.user_id,
-            'images': [image.format() for image in self.images]
+            'images': [image.format() for image in self.images],
+            'reacts': [react.format() for react in self.reacts]
         }
 
     def __repr__(self):

@@ -24,7 +24,14 @@ class React(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String, nullable=False)
-    post_id = db.Column(db.Integer, nullable=False)
+    post_id = db.Column(
+        db.Integer, db.ForeignKey('post.id'),
+        nullable=False
+    )
+    post = db.relationship(
+        'Post', backref='reacts', uselist=False,
+        lazy=True
+    )
 
     """
     insert()

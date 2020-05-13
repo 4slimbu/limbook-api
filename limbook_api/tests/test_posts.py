@@ -39,6 +39,20 @@ class PostsTestCase(BaseTestCase):
             '/posts/1/images?mock_token_verification=True')
         data5 = json.loads(res5.data)
 
+        # get reacts
+        res6 = self.client().get(
+            '/posts/1/reacts'
+            + '?mock_token_verification=True'
+        )
+        data6 = json.loads(res6.data)
+
+        # toggle react
+        res7 = self.client().post(
+            '/posts/1/reacts/toggle'
+            + '?mock_token_verification=True'
+        )
+        data7 = json.loads(res7.data)
+
         # assert
         self.assertEqual(res1.status_code, 401)
         self.assertEqual(data1.get('error_code'), 'no_permission')
@@ -50,6 +64,10 @@ class PostsTestCase(BaseTestCase):
         self.assertEqual(data4.get('error_code'), 'no_permission')
         self.assertEqual(res5.status_code, 401)
         self.assertEqual(data5.get('error_code'), 'no_permission')
+        self.assertEqual(res6.status_code, 401)
+        self.assertEqual(data6.get('error_code'), 'no_permission')
+        self.assertEqual(res7.status_code, 401)
+        self.assertEqual(data7.get('error_code'), 'no_permission')
 
     def test_can_get_posts(self):
         # given
@@ -224,6 +242,33 @@ class PostsTestCase(BaseTestCase):
             os.path.isfile(image.get('url').get('medium')))
         self.assertFalse(
             os.path.isfile(image.get('url').get('thumb')))
+
+    def test_can_react_and_unreact_post(self):
+        # given
+        post = create_post()
+        post_id = post.id
+
+        # make request
+        res = self.client().post(
+            '/posts/' + str(post_id) + '/reacts/toggle'
+            + '?mock_token_verification=True&permission=update:reacts'
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(data.get('post').get('reacts')), 1)
+
+        # make request
+        res = self.client().post(
+            '/posts/' + str(post_id) + '/reacts/toggle'
+            + '?mock_token_verification=True&permission=update:reacts'
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(data.get('post').get('reacts')), 0)
 
 
 # Make the tests conveniently executable
