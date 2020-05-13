@@ -1,8 +1,10 @@
+import io
+import os
 from unittest import main
 
 from flask import json
 
-from limbook_api.image_manager import create_image
+from limbook_api.image_manager import create_image, generate_img_in_bytes
 from limbook_api.posts import create_post
 from limbook_api.tests.base import BaseTestCase, test_user_id
 
@@ -176,6 +178,52 @@ class PostsTestCase(BaseTestCase):
         self.assertEqual(data.get('success'), True)
         self.assertEqual(data.get('post').get('images')[0], image1.format())
         self.assertEqual(data.get('post').get('images')[1], image2.format())
+
+    def test_deleting_post_should_delete_images_as_well(self):
+        # given
+        # create image
+        image = (io.BytesIO(generate_img_in_bytes()), 'test.jpg')
+        data = {"image": image}
+
+        # save image
+        res = self.client().post(
+            '/images'
+            + '?mock_token_verification=True&permission=create:images',
+            data=data
+        )
+        image = json.loads(res.data).get('image')
+
+        # create post
+        post = create_post(user_id=test_user_id)
+        data = {
+            "image_ids": [image.get('id')]
+        }
+
+        # attach images to post
+        res = self.client().post(
+            '/posts/' + str(post.id) + '/images'
+            + '?mock_token_verification=True&permission=update:posts',
+            json=data
+        )
+        post_with_image = json.loads(res.data).get('post')
+
+        # delete post
+        res = self.client().delete(
+            '/posts/' + str(post.id)
+            + '?mock_token_verification=True&permission=delete:posts'
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data.get('deleted_post').get('id'), post_with_image.get('id'))
+        self.assertEqual(len(data.get('deleted_post').get('images')), 0)
+        self.assertFalse(
+            os.path.isfile(image.get('url').get('large')))
+        self.assertFalse(
+            os.path.isfile(image.get('url').get('medium')))
+        self.assertFalse(
+            os.path.isfile(image.get('url').get('thumb')))
 
 
 # Make the tests conveniently executable

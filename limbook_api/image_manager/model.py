@@ -3,6 +3,7 @@ from random import randint
 from flask import json
 
 from limbook_api.db import db, BaseDbModel
+from limbook_api.image_manager import delete_image_set
 
 
 def create_image(image=None, user_id=None):
@@ -35,10 +36,21 @@ class Image(BaseDbModel):
     url = db.Column(db.String, nullable=False)
 
     """
-        format()
-            format the data for the api
-        """
+    delete()
+        deletes a image from the database
+        the model must exist in the database
+    """
+    def delete(self):
+        # delete image file
+        delete_image_set(self)
+        # delete image data
+        db.session.delete(self)
+        db.session.commit()
 
+    """
+    format()
+        format the data for the api
+    """
     def format(self):
         return {
             'id': self.id,

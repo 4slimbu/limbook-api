@@ -158,7 +158,13 @@ def delete_posts(post_id):
         abort(403)
 
     try:
+        # delete images
+        for image in post.images:
+            image.delete()
+
+        # delete post
         post.delete()
+
         return jsonify({
             "success": True,
             "deleted_post": post.format()

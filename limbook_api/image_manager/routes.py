@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, request, json
 
 from limbook_api.auth import requires_auth, auth_user_id
-from limbook_api.image_manager import Image, create_img_set, delete_image_set
+from limbook_api.image_manager import Image, create_img_set
 
 image_manager = Blueprint('image_manager', __name__)
 
@@ -139,11 +139,9 @@ def delete_images(image_id):
 
     try:
         image.delete()
-        deleted_image = image.format()
-        delete_image_set(deleted_image.get('url'))
         return jsonify({
             "success": True,
-            "deleted_image": deleted_image
+            "deleted_image": image.format()
         })
     except Exception as e:
         abort(400)

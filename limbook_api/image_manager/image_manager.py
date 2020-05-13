@@ -80,6 +80,8 @@ def create_img_set(image_file):
         }, 400)
 
 
-def delete_image_set(url_set):
+def delete_image_set(image):
+    url_set = image.format().get('url')
     for value in url_set.values():
-        os.remove(value)
+        if os.path.isfile(value):
+            os.remove(value)
