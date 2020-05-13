@@ -1,12 +1,11 @@
 import json
-import os
 from functools import wraps
 from urllib.request import urlopen
 
 from flask import request, abort, current_app
 from jose import jwt
 
-from limbook_api.errors.handlers import AuthError
+from limbook_api.errors import AuthError
 from limbook_api.tests.base import mock_token_verification
 
 

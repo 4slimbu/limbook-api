@@ -2,7 +2,7 @@ from flask import json
 from random import randint
 from sqlalchemy import func
 
-from limbook_api.models import db
+from limbook_api.db import db
 
 
 def create_activity(activity=None):

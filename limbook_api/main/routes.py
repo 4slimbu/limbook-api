@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 
-from limbook_api.auth.auth import requires_auth
+from limbook_api.auth import requires_auth
 
 main = Blueprint('main', __name__)
 
