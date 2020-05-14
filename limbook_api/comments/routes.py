@@ -1,34 +1,10 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.auth import requires_auth, auth_user_id
-from limbook_api.comments import Comment
+from limbook_api.comments import Comment, get_all_comments_in_json, \
+    validate_comment_data
 
 comments = Blueprint('comments', __name__)
-
-
-def validate_comment_data(data):
-    # check if comment attributes are present
-    if not data.get('content'):
-        abort(422)
-
-
-def get_all_comments_in_json(post_id):
-    # get comments
-    comments = Comment.query.filter(Comment.post_id == post_id).all()
-    # get count
-    comments_count = Comment.query.filter(Comment.post_id == post_id).count()
-
-    # format
-    data = []
-    for comment in comments:
-        data.append(comment.format())
-
-    # return the result
-    return jsonify({
-        'success': True,
-        'comments': data,
-        'comments_count': comments_count
-    })
 
 
 # ====================================

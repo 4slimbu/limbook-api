@@ -2,7 +2,7 @@ from unittest import main
 
 from flask import json
 
-from limbook_api.comments import create_comment
+from limbook_api.comments import generate_comment
 from limbook_api.posts import create_post
 from limbook_api.tests.base import BaseTestCase, test_user_id
 
@@ -49,11 +49,10 @@ class CommentsTestCase(BaseTestCase):
     def test_can_get_comments(self):
         # given
         post = create_post()
-        comment = create_comment({
-            "content": "New comment",
-            "user_id": test_user_id,
-            "post_id": post.id
-        })
+        comment = generate_comment(
+            user_id=test_user_id,
+            post_id=post.id
+        )
 
         # make request
         res = self.client().get(
@@ -95,11 +94,10 @@ class CommentsTestCase(BaseTestCase):
     def test_can_update_comments(self):
         # given
         post = create_post()
-        comment = create_comment({
-            "content": "My new comment",
-            "user_id": test_user_id,
-            "post_id": post.id
-        })
+        comment = generate_comment(
+            user_id=test_user_id,
+            post_id=post.id
+        )
         updated_comment_content = {
             "content": "My Updated Content"
         }
@@ -122,11 +120,10 @@ class CommentsTestCase(BaseTestCase):
     def test_can_delete_comments(self):
         # given
         post = create_post()
-        comment = create_comment({
-            'content': 'My new comment',
-            'user_id': test_user_id,
-            'post_id': post.id
-        })
+        comment = generate_comment(
+            user_id=test_user_id,
+            post_id=post.id
+        )
 
         # make request
         res = self.client().delete(
