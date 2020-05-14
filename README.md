@@ -1,5 +1,11 @@
 # Limbook Api
-A simple starter template for Flask Application
+An api for social network.
+
+**Under development. Please check back later.**
+
+**First release is scheduled for: May 16 2020**
+
+**Feel free to contribute**
 
 # Installation
 Using virtual environment
