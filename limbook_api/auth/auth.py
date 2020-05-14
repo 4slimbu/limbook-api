@@ -1,12 +1,12 @@
 import json
-import os
 from functools import wraps
 from urllib.request import urlopen
 
 from flask import request, abort, current_app
 from jose import jwt
 
-from limbook_api.errors.handlers import AuthError
+from limbook_api.errors import AuthError
+from limbook_api.tests.base import mock_token_verification
 
 
 def get_token_auth_header():
@@ -61,11 +61,6 @@ def verify_decode_jwt(token):
     auth0_domain = current_app.config.get('AUTH0_DOMAIN')
     algorithms = current_app.config.get('ALGORITHMS')
     api_audience = current_app.config.get('API_AUDIENCE')
-
-    # TODO: find a better solution instead of this hack for testing
-    if current_app.config.get('TESTING'):
-        if request.args.get('mock_jwt_claim') == 'True':
-            return jwt.get_unverified_claims(token)
 
     json_url = urlopen(f'https://{auth0_domain}/.well-known/jwks.json')
     jwks = json.loads(json_url.read())
@@ -144,8 +139,18 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
+
+            # TODO: find a better solution instead of this hack for testing
+            if current_app.config.get('TESTING') \
+                    and request.args.get('mock_token_verification') == 'True':
+                payload = mock_token_verification(
+                    permission=request.args.get('permission')
+                )
+            else:
+                token = get_token_auth_header()
+                payload = verify_decode_jwt(token)
+
+            current_app.config['payload'] = payload
 
             if not check_permissions(permission, payload):
                 raise AuthError({
@@ -153,8 +158,16 @@ def requires_auth(permission=''):
                     'description': 'No Permission'
                 }, 401)
 
-            return f(payload, *args, **kwargs)
+            return f(*args, **kwargs)
 
         return wrapper
 
     return requires_auth_decorator
+
+
+def auth_user_id():
+    payload = current_app.config.get('payload')
+    if payload is None:
+        abort(401)
+
+    return payload.get('sub')
