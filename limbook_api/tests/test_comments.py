@@ -13,38 +13,44 @@ class CommentsTestCase(BaseTestCase):
     # Comments Tests ----------------------------------------
     def test_cannot_access_comment_routes_without_correct_permission(self):
         # get comments
-        res1 = self.client().get(
+        res = self.client().get(
             '/posts/1/comments?mock_token_verification=True'
         )
-        data1 = json.loads(res1.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # create comment
-        res2 = self.client().post(
+        res = self.client().post(
             '/posts/1/comments?mock_token_verification=True'
         )
-        data2 = json.loads(res2.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # update comment
-        res3 = self.client().patch(
+        res = self.client().patch(
             '/posts/1/comments/1?mock_token_verification=True'
         )
-        data3 = json.loads(res3.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # delete comment
-        res4 = self.client().delete(
+        res = self.client().delete(
             '/posts/1/comments/1?mock_token_verification=True'
         )
-        data4 = json.loads(res4.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
-        # assert
-        self.assertEqual(res1.status_code, 401)
-        self.assertEqual(data1.get('error_code'), 'no_permission')
-        self.assertEqual(res2.status_code, 401)
-        self.assertEqual(data2.get('error_code'), 'no_permission')
-        self.assertEqual(res3.status_code, 401)
-        self.assertEqual(data3.get('error_code'), 'no_permission')
-        self.assertEqual(res4.status_code, 401)
-        self.assertEqual(data4.get('error_code'), 'no_permission')
+        # reply comment
+        res = self.client().post(
+            '/posts/1/comments/1/replies?mock_token_verification=True'
+        )
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_can_get_comments(self):
         # given
@@ -135,6 +141,84 @@ class CommentsTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('deleted_comment'), comment.format())
+
+    def test_can_reply_to_comment(self):
+        # given
+        post = generate_post()
+        post_id = post.id
+        comment = generate_comment(post_id=post_id)
+        comment_id = comment.id
+
+        reply = {
+            "content": "My Reply"
+        }
+
+        # reply to comment
+        res = self.client().post(
+            '/posts/' + str(post_id)
+            + '/comments/' + str(comment_id) + '/replies'
+            + '?mock_token_verification=True&permission=create:comments',
+            json=reply
+        )
+        data = json.loads(res.data)
+
+        # assert
+        expected_reply = {
+            **reply,
+            "user_id": test_user_id,
+            "post_id": post_id,
+            "parent_id": comment_id
+        }
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(expected_reply.items() <= data.get('reply').items())
+
+    def test_reply_are_one_level_deep(self):
+        """
+        If you reply to reply, then it will be reply to top level comment.
+        """
+        # given
+        post = generate_post()
+        post_id = post.id
+        comment = generate_comment(post_id=post_id)
+        comment_id = comment.id
+
+        reply = {"content": "My Reply"}
+
+        # reply to comment
+        res = self.client().post(
+            '/posts/' + str(post_id)
+            + '/comments/' + str(comment_id) + '/replies'
+            + '?mock_token_verification=True&permission=create:comments',
+            json=reply
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertTrue(data.get('reply').get('parent_id') == comment_id)
+
+        # reply to reply
+        res = self.client().post(
+            '/posts/' + str(post_id)
+            + '/comments/' + str(data.get('reply').get('id')) + '/replies'
+            + '?mock_token_verification=True&permission=create:comments',
+            json=reply
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertTrue(data.get('reply').get('parent_id') == comment_id)
+
+        # reply to reply of reply
+        res = self.client().post(
+            '/posts/' + str(post_id)
+            + '/comments/' + str(data.get('reply').get('id')) + '/replies'
+            + '?mock_token_verification=True&permission=create:comments',
+            json=reply
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertTrue(data.get('reply').get('parent_id') == comment_id)
 
 
 # Make the tests conveniently executable

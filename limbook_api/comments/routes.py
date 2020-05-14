@@ -137,3 +137,47 @@ def delete_comments(post_id, comment_id):
         })
     except Exception as e:
         abort(400)
+
+
+@comments.route(
+    "/posts/<int:post_id>/comments/<int:comment_id>/replies",
+    methods=['POST']
+)
+@requires_auth('create:comments')
+def reply_comments(post_id, comment_id):
+    """ Reply comments
+
+        Parameters:
+            post_id (int): Id of post on which comment was made
+            comment_id (int): Id of comment
+
+        Internal Parameters:
+            user_id (string): Internal parameter extracted from current_user
+
+        Returns:
+            success (boolean)
+            comment: (dict)
+    """
+    # vars
+    data = request.get_json()
+    validate_comment_data(data)
+
+    # get comment
+    comment = Comment.query.first_or_404(comment_id)
+
+    try:
+        # reply comment
+        reply = Comment(**{
+            'content': data.get('content'),
+            'parent_id': comment.parent_id if comment.parent_id else comment.id,
+            'user_id': auth_user_id(),
+            'post_id': post_id
+        })
+        reply.insert()
+
+        return jsonify({
+            "success": True,
+            "reply": reply.format()
+        })
+    except Exception as e:
+        abort(400)

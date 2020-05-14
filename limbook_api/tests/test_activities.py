@@ -13,22 +13,20 @@ class ActivitiesTestCase(BaseTestCase):
     # Activities Tests ----------------------------------------
     def test_cannot_access_activity_routes_without_correct_permission(self):
         # get activities
-        res1 = self.client().get(
+        res = self.client().get(
             '/activities?mock_token_verification=True'
         )
-        data1 = json.loads(res1.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # delete activity
-        res2 = self.client().delete(
+        res = self.client().delete(
             '/activities/1?mock_token_verification=True'
         )
-        data2 = json.loads(res2.data)
-
-        # assert
-        self.assertEqual(res1.status_code, 401)
-        self.assertEqual(data1.get('error_code'), 'no_permission')
-        self.assertEqual(res2.status_code, 401)
-        self.assertEqual(data2.get('error_code'), 'no_permission')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_can_get_activities(self):
         # given

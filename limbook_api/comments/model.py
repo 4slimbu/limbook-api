@@ -15,6 +15,10 @@ class Comment(BaseDbModel):
         'Post', backref='comments', uselist=False,
         lazy=True
     )
+    parent_id = db.Column(
+        db.Integer, db.ForeignKey('comment.id'),
+        nullable=True
+    )
 
     """
     format()
@@ -26,6 +30,7 @@ class Comment(BaseDbModel):
             'content': self.content,
             'user_id': self.user_id,
             'post_id': self.post_id,
+            'parent_id': self.parent_id,
             'created_on': self.created_on.__str__(),
             'updated_on': self.updated_on.__str__(),
         }
