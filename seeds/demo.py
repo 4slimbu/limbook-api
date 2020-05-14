@@ -1,7 +1,7 @@
 from faker import Faker as Generator
 from flask_seeder import Seeder
 
-from limbook_api.posts import create_post
+from limbook_api.posts import generate_post
 from limbook_api.db import db_drop_and_create_all
 
 generator = Generator()
@@ -18,4 +18,4 @@ class DemoSeeder(Seeder):
         # ====================
         # Create 5 drinks
         for i in range(0, 15):
-            create_post()
+            generate_post()

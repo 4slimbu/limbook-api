@@ -1,34 +1,11 @@
 from flask import Blueprint, jsonify, abort, request, json
 
 from limbook_api.auth import requires_auth, auth_user_id
-from limbook_api.image_manager import Image, create_img_set
+from limbook_api.image_manager import Image, create_img_set, \
+    get_all_user_images_in_json, validate_image_data
+from limbook_api.posts import Post, get_images_list_using_ids
 
 image_manager = Blueprint('image_manager', __name__)
-
-
-def validate_image_data(data):
-    # check if image attributes are present
-    if not data.get('image'):
-        abort(422)
-
-
-def get_all_user_images_in_json():
-    # get images
-    images = Image.query.filter(Image.user_id == auth_user_id()).all()
-    # get count
-    images_count = Image.query.filter(Image.user_id == auth_user_id()).count()
-
-    # format
-    data = []
-    for image in images:
-        data.append(image.format())
-
-    # return the result
-    return jsonify({
-        'success': True,
-        'images': data,
-        'images_count': images_count
-    })
 
 
 # ====================================
@@ -142,6 +119,44 @@ def delete_images(image_id):
         return jsonify({
             "success": True,
             "deleted_image": image.format()
+        })
+    except Exception as e:
+        abort(400)
+
+
+@image_manager.route("/posts/<int:post_id>/images", methods=['POST'])
+@requires_auth('update:posts')
+def attach_images_to_post(post_id):
+    """ Attach images to post
+
+        Parameters:
+            post_id (int): Id of post
+
+        Internal Parameters:
+            image_ids (list): List of image ids
+
+        Returns:
+            success (boolean)
+            post (dict)
+    """
+    # vars
+    post = Post.query.first_or_404(post_id)
+
+    # can attach images to own post only
+    if post.user_id != auth_user_id():
+        abort(403)
+
+    # attach images
+    data = request.get_json()
+    image_ids = data.get('image_ids')
+    images = get_images_list_using_ids(image_ids)
+
+    try:
+        post.images = images
+        post.update()
+        return jsonify({
+            "success": True,
+            "post": post.format()
         })
     except Exception as e:
         abort(400)

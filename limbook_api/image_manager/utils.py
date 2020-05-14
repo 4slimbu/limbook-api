@@ -1,12 +1,15 @@
 import io
 import os
 import secrets
+from random import randint
 
 from PIL import Image as PImage
-from flask import current_app
+from flask import current_app, json, abort, jsonify
 from werkzeug.utils import secure_filename
 
+from limbook_api.auth import auth_user_id
 from limbook_api.errors import ImageUploadError
+from limbook_api.image_manager import Image
 
 
 def generate_img_in_bytes(width=500, height=500):
@@ -85,3 +88,44 @@ def delete_image_set(image):
     for value in url_set.values():
         if os.path.isfile(value):
             os.remove(value)
+
+
+def generate_image(user_id=None, url=None):
+    """Generates new image with random attributes for testing
+    """
+    image = Image(**{
+        'user_id': user_id if user_id else 'auth0|' + str(randint(1000, 9999)),
+        'url': url if url else json.dumps({
+            "thumb": "thumb-" + str(randint(1000, 9999)) + '.jpg',
+            "medium": "medium-" + str(randint(1000, 9999)) + '.jpg',
+            "large": "large-" + str(randint(1000, 9999)) + '.jpg'
+        })
+    })
+
+    image.insert()
+    return image
+
+
+def validate_image_data(data):
+    # check if image attributes are present
+    if not data.get('image'):
+        abort(422)
+
+
+def get_all_user_images_in_json():
+    # get images
+    images = Image.query.filter(Image.user_id == auth_user_id()).all()
+    # get count
+    images_count = Image.query.filter(Image.user_id == auth_user_id()).count()
+
+    # format
+    data = []
+    for image in images:
+        data.append(image.format())
+
+    # return the result
+    return jsonify({
+        'success': True,
+        'images': data,
+        'images_count': images_count
+    })

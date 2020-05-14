@@ -3,7 +3,7 @@ from unittest import main
 from flask import json
 
 from limbook_api.activities import generate_activity
-from limbook_api.posts import create_post
+from limbook_api.posts import generate_post
 from limbook_api.tests.base import BaseTestCase, test_user_id
 
 
@@ -32,7 +32,7 @@ class ActivitiesTestCase(BaseTestCase):
 
     def test_can_get_activities(self):
         # given
-        post = create_post()
+        post = generate_post()
         activity = generate_activity(
             user_id=test_user_id,
             post_id=post.id
@@ -51,7 +51,7 @@ class ActivitiesTestCase(BaseTestCase):
 
     def test_can_delete_activities(self):
         # given
-        post = create_post()
+        post = generate_post()
         activity = generate_activity(
             user_id=test_user_id,
             post_id=post.id
