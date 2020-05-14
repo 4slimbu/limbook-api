@@ -1,29 +1,20 @@
-from random import randint
-
 from flask import json
 
 from limbook_api.db import db, BaseDbModel
-from limbook_api.image_manager import delete_image_set
 
-
-def create_image(image=None, user_id=None):
-    """Generates new image with random attributes for testing
-    """
-    if image:
-        image = Image(**image)
-    else:
-        rand_user_id = 'auth0|' + str(randint(1000, 9999))
-        image = Image(**{
-            'user_id': user_id if user_id else rand_user_id,
-            'url': json.dumps({
-                "thumb": "thumb-" + str(randint(1000, 9999)) + '.jpg',
-                "medium": "medium-" + str(randint(1000, 9999)) + '.jpg',
-                "large": "large-" + str(randint(1000, 9999)) + '.jpg'
-            })
-        })
-
-    image.insert()
-    return image
+post_image = db.Table(
+    'post_image',
+    db.Column(
+        'post_id', db.Integer,
+        db.ForeignKey('post.id', ondelete="cascade"),
+        primary_key=True
+    ),
+    db.Column(
+        'image_id', db.Integer,
+        db.ForeignKey('image.id'),
+        primary_key=True
+    )
+)
 
 
 class Image(BaseDbModel):
@@ -35,6 +26,11 @@ class Image(BaseDbModel):
     # list of full path of image set (thumbnail, medium, large, full)
     url = db.Column(db.String, nullable=False)
 
+    post = db.relationship(
+        'Post', secondary=post_image,
+        backref=db.backref('images', lazy=True)
+    )
+
     """
     delete()
         deletes a image from the database
@@ -42,6 +38,7 @@ class Image(BaseDbModel):
     """
     def delete(self):
         # delete image file
+        from limbook_api.image_manager import delete_image_set
         delete_image_set(self)
         # delete image data
         db.session.delete(self)

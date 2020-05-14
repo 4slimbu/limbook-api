@@ -1,34 +1,9 @@
 from flask import Blueprint, jsonify, abort
 
 from limbook_api.auth import requires_auth, auth_user_id
-from limbook_api.activities import Activity
+from limbook_api.activities import Activity, get_all_activities_in_json
 
 activities = Blueprint('activities', __name__)
-
-
-def validate_activity_data(data):
-    # check if activity attributes are present
-    if not data.get('content'):
-        abort(422)
-
-
-def get_all_activities_in_json(user_id):
-    # get activities
-    activities = Activity.query.filter(Activity.user_id == user_id).all()
-    # get count
-    activities_count = Activity.query.filter(Activity.user_id == user_id).count()
-
-    # format
-    data = []
-    for activity in activities:
-        data.append(activity.format())
-
-    # return the result
-    return jsonify({
-        'success': True,
-        'activities': data,
-        'activities_count': activities_count
-    })
 
 
 # ====================================

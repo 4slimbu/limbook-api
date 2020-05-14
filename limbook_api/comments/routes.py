@@ -1,34 +1,10 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.auth import requires_auth, auth_user_id
-from limbook_api.comments import Comment
+from limbook_api.comments import Comment, get_all_comments_in_json, \
+    validate_comment_data
 
 comments = Blueprint('comments', __name__)
-
-
-def validate_comment_data(data):
-    # check if comment attributes are present
-    if not data.get('content'):
-        abort(422)
-
-
-def get_all_comments_in_json(post_id):
-    # get comments
-    comments = Comment.query.filter(Comment.post_id == post_id).all()
-    # get count
-    comments_count = Comment.query.filter(Comment.post_id == post_id).count()
-
-    # format
-    data = []
-    for comment in comments:
-        data.append(comment.format())
-
-    # return the result
-    return jsonify({
-        'success': True,
-        'comments': data,
-        'comments_count': comments_count
-    })
 
 
 # ====================================
@@ -158,6 +134,50 @@ def delete_comments(post_id, comment_id):
         return jsonify({
             "success": True,
             "deleted_comment": comment.format()
+        })
+    except Exception as e:
+        abort(400)
+
+
+@comments.route(
+    "/posts/<int:post_id>/comments/<int:comment_id>/replies",
+    methods=['POST']
+)
+@requires_auth('create:comments')
+def reply_comments(post_id, comment_id):
+    """ Reply comments
+
+        Parameters:
+            post_id (int): Id of post on which comment was made
+            comment_id (int): Id of comment
+
+        Internal Parameters:
+            user_id (string): Internal parameter extracted from current_user
+
+        Returns:
+            success (boolean)
+            comment: (dict)
+    """
+    # vars
+    data = request.get_json()
+    validate_comment_data(data)
+
+    # get comment
+    comment = Comment.query.first_or_404(comment_id)
+
+    try:
+        # reply comment
+        reply = Comment(**{
+            'content': data.get('content'),
+            'parent_id': comment.parent_id if comment.parent_id else comment.id,
+            'user_id': auth_user_id(),
+            'post_id': post_id
+        })
+        reply.insert()
+
+        return jsonify({
+            "success": True,
+            "reply": reply.format()
         })
     except Exception as e:
         abort(400)

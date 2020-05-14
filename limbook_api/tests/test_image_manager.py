@@ -4,7 +4,8 @@ from unittest import main
 
 from flask import json
 
-from limbook_api.image_manager import generate_img_in_bytes, create_image
+from limbook_api.image_manager import generate_img_in_bytes, generate_image
+from limbook_api.posts import generate_post
 from limbook_api.tests.base import BaseTestCase, test_user_id
 
 
@@ -13,47 +14,45 @@ class ImageManagerTestCase(BaseTestCase):
 
     def test_cannot_access_image_routes_without_correct_permission(self):
         # create image
-        res1 = self.client().post(
+        res = self.client().post(
             '/images'
             + '?mock_token_verification=True'
         )
-        data1 = json.loads(res1.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # get image
-        res2 = self.client().get(
+        res = self.client().get(
             '/images/1'
             + '?mock_token_verification=True'
         )
-        data2 = json.loads(res2.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # get images
-        res3 = self.client().get(
+        res = self.client().get(
             '/images'
             + '?mock_token_verification=True'
         )
-        data3 = json.loads(res3.data)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
         # delete image
-        res4 = self.client().delete(
+        res = self.client().delete(
             '/images/1'
             + '?mock_token_verification=True'
         )
-        data4 = json.loads(res4.data)
-
-        # assert
-        self.assertEqual(res1.status_code, 401)
-        self.assertEqual(data1.get('error_code'), 'no_permission')
-        self.assertEqual(res2.status_code, 401)
-        self.assertEqual(data2.get('error_code'), 'no_permission')
-        self.assertEqual(res3.status_code, 401)
-        self.assertEqual(data3.get('error_code'), 'no_permission')
-        self.assertEqual(res4.status_code, 401)
-        self.assertEqual(data4.get('error_code'), 'no_permission')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_cannot_retrieve_other_images(self):
         """ I can only retrieve my images """
         # given
-        image = create_image()
+        image = generate_image()
 
         # make request
         res = self.client().get(
@@ -70,10 +69,10 @@ class ImageManagerTestCase(BaseTestCase):
     def test_can_retrieve_own_images(self):
         """ I can retrieve all my images """
         # given
-        image1 = create_image(user_id=test_user_id)
-        image2 = create_image(user_id=test_user_id)
-        image3 = create_image()
-        image4 = create_image()
+        image1 = generate_image(user_id=test_user_id)
+        image2 = generate_image(user_id=test_user_id)
+        image3 = generate_image()
+        image4 = generate_image()
 
         # make request
         res = self.client().get(
@@ -171,7 +170,7 @@ class ImageManagerTestCase(BaseTestCase):
         so, user shouldn't be able to get the image
         """
         # given
-        image = create_image()
+        image = generate_image()
         image_id = image.id
 
         # make request
@@ -189,14 +188,14 @@ class ImageManagerTestCase(BaseTestCase):
         retrieve it.
         """
         # given
-        image = create_image({
-            'user_id': test_user_id,
-            'url': json.dumps({
+        image = generate_image(
+            user_id=test_user_id,
+            url=json.dumps({
                 "thumb": "thumb.jpg",
                 "medium": "medium.jpg",
                 "large": "large.jpg"
             })
-        })
+        )
 
         # make request
         res = self.client().get(
@@ -214,7 +213,7 @@ class ImageManagerTestCase(BaseTestCase):
         I should not be able to delete image created by other user.
         """
         # given
-        image = create_image()
+        image = generate_image()
 
         # make request
         res = self.client().delete(
@@ -258,6 +257,113 @@ class ImageManagerTestCase(BaseTestCase):
             os.path.isfile(data.get('deleted_image').get('url').get('medium')))
         self.assertFalse(
             os.path.isfile(data.get('deleted_image').get('url').get('thumb')))
+
+    # -------------------------------------------------
+    # Test involving posts
+    # -------------------------------------------------
+
+    def test_cannot_access_post_image_routes_without_permission(self):
+        # attach image to post
+        res = self.client().post(
+            '/posts/1/images?mock_token_verification=True')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
+
+    def test_cannot_add_others_images_to_post(self):
+        """ Cannot add other user's images to own post
+
+        Other user's image should not be accessible
+        to current user and hence should not be able to
+        assign it to own posts
+        """
+        # given
+        post = generate_post(user_id=test_user_id)
+        image1 = generate_image()
+        image2 = generate_image()
+        data = {
+            "image_ids": [image1.id, image2.id]
+        }
+
+        # make request
+        res = self.client().post(
+            '/posts/' + str(post.id) + '/images'
+            + '?mock_token_verification=True&permission=update:posts',
+            json=data
+        )
+
+        # assert
+        self.assertEqual(res.status_code, 404)
+
+    def test_can_add_own_images_to_post(self):
+        # given
+        post = generate_post(user_id=test_user_id)
+        image1 = generate_image(user_id=test_user_id)
+        image2 = generate_image(user_id=test_user_id)
+        data = {
+            "image_ids": [image1.id, image2.id]
+        }
+
+        # make request
+        res = self.client().post(
+            '/posts/' + str(post.id) + '/images'
+            + '?mock_token_verification=True&permission=update:posts',
+            json=data
+        )
+
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data.get('success'), True)
+        self.assertEqual(data.get('post').get('images')[0], image1.format())
+        self.assertEqual(data.get('post').get('images')[1], image2.format())
+
+    def test_deleting_post_should_delete_images_as_well(self):
+        # given
+        # create image
+        image = (io.BytesIO(generate_img_in_bytes()), 'test.jpg')
+        data = {"image": image}
+
+        # save image
+        res = self.client().post(
+            '/images'
+            + '?mock_token_verification=True&permission=create:images',
+            data=data
+        )
+        image = json.loads(res.data).get('image')
+
+        # create post
+        post = generate_post(user_id=test_user_id)
+        data = {
+            "image_ids": [image.get('id')]
+        }
+
+        # attach images to post
+        res = self.client().post(
+            '/posts/' + str(post.id) + '/images'
+            + '?mock_token_verification=True&permission=update:posts',
+            json=data
+        )
+        post_with_image = json.loads(res.data).get('post')
+
+        # delete post
+        res = self.client().delete(
+            '/posts/' + str(post.id)
+            + '?mock_token_verification=True&permission=delete:posts'
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data.get('deleted_post').get('id'), post_with_image.get('id'))
+        self.assertEqual(len(data.get('deleted_post').get('images')), 0)
+        self.assertFalse(
+            os.path.isfile(image.get('url').get('large')))
+        self.assertFalse(
+            os.path.isfile(image.get('url').get('medium')))
+        self.assertFalse(
+            os.path.isfile(image.get('url').get('thumb')))
 
 
 # Make the tests conveniently executable
