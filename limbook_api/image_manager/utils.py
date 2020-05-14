@@ -3,7 +3,7 @@ import os
 import secrets
 
 from PIL import Image as PImage
-from flask import current_app, abort
+from flask import current_app
 from werkzeug.utils import secure_filename
 
 from limbook_api.errors import ImageUploadError
