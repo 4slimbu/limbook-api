@@ -2,9 +2,8 @@ from unittest import main
 
 from flask import json
 
-from limbook_api.tests.v1 import api_base
 from limbook_api.v1.posts import generate_post
-from limbook_api.tests.base import BaseTestCase
+from tests.base import BaseTestCase, api_base
 
 
 class ReactsTestCase(BaseTestCase):
