@@ -3,8 +3,7 @@ from unittest import main
 from flask import json
 
 from limbook_api.v1.friends import Friend, generate_friend
-from limbook_api.tests.base import BaseTestCase
-from limbook_api.tests.v1 import test_user_id, api_base
+from tests.base import BaseTestCase, test_user_id, api_base
 
 
 class FriendsTestCase(BaseTestCase):

@@ -4,8 +4,7 @@ from flask import json
 
 from limbook_api.v1.comments import generate_comment
 from limbook_api.v1.posts import generate_post
-from limbook_api.tests.base import BaseTestCase
-from limbook_api.tests.v1 import test_user_id, api_base
+from tests.base import BaseTestCase, test_user_id, api_base
 
 
 class CommentsTestCase(BaseTestCase):

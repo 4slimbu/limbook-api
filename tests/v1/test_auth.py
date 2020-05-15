@@ -2,8 +2,7 @@ from unittest import main
 
 from flask import json
 
-from limbook_api.tests.base import BaseTestCase
-from limbook_api.tests.v1 import api_base
+from tests.base import BaseTestCase, api_base
 
 
 class AuthTestCase(BaseTestCase):

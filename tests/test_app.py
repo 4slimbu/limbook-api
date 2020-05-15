@@ -1,6 +1,6 @@
 from unittest import main
 
-from limbook_api.tests.base import BaseTestCase
+from tests.base import BaseTestCase
 
 
 class AppTestCase(BaseTestCase):
