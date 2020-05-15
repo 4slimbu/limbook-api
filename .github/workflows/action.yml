@@ -33,7 +33,7 @@
 
         - name: Run tests
           run: |
-            python -m unittest limbook_api/tests/test*.py
+            pytest
 
 #        - name: Set heroku credentials
 #          env:
