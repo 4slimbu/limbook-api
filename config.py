@@ -37,7 +37,7 @@ class Config:
     }
 
     # Image upload directory
-    IMG_UPLOAD_DIR = 'static/img/uploads'
+    IMG_UPLOAD_DIR = 'limbook_api/static/img/uploads'
 
     # -------------------------------------------
     # Email

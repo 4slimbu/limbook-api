@@ -1,4 +1,4 @@
-from limbook_api import Config
+from config import Config
 
 
 class TestConfig(Config):
