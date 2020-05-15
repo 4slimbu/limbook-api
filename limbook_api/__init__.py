@@ -26,12 +26,14 @@ def create_app(config_class=Config):
     from limbook_api.comments.routes import comments
     from limbook_api.activities.routes import activities
     from limbook_api.image_manager.routes import image_manager
+    from limbook_api.friends.routes import friends
     app.register_blueprint(main)
     app.register_blueprint(posts)
     app.register_blueprint(reacts)
     app.register_blueprint(comments)
     app.register_blueprint(activities)
     app.register_blueprint(image_manager)
+    app.register_blueprint(friends)
 
     # register error handlers
     register_error_handlers(app)
