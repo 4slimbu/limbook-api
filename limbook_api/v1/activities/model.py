@@ -9,7 +9,10 @@ class Activity(BaseDbModel):
     user_id = db.Column(db.String, nullable=False)
     post_id = db.Column(db.Integer, nullable=False)
     action = db.Column(
-        db.Enum('commented', 'reacted', 'created', 'updated', 'deleted', name="actions"),
+        db.Enum(
+            'commented', 'reacted', 'created', 'updated', 'deleted',
+            name="actions"
+        ),
         nullable=False
     )
 

@@ -9,6 +9,9 @@ class Config:
     # App secret
     SECRET_KEY = "my_secret_key"
 
+    # Pagination
+    PAGINATION = 10
+
     # -------------------------------------------
     # Database
     # -------------------------------------------

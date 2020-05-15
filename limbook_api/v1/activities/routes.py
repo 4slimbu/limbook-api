@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, abort
+from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
-from limbook_api.v1.activities import Activity, get_all_activities_in_json
+from limbook_api.v1.activities import Activity, filter_activities
 
 activities = Blueprint('activities', __name__)
 
@@ -20,8 +20,12 @@ def get_activities():
             total_activities (int)
     """
     try:
-        user_id = auth_user_id()
-        return get_all_activities_in_json(user_id)
+        return jsonify({
+            'success': True,
+            'activities': [activity.format() for activity in filter_activities()],
+            'total': filter_activities(count_only=True),
+            'query_args': request.args,
+        })
     except Exception as e:
         abort(400)
 
@@ -50,7 +54,7 @@ def delete_activities(activity_id):
         activity.delete()
         return jsonify({
             "success": True,
-            "deleted_activity": activity.format()
+            "deleted_id": activity.id
         })
     except Exception as e:
         abort(400)
