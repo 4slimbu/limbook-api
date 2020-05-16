@@ -1,5 +1,19 @@
 from limbook_api.db import db, BaseDbModel
 
+role_permission = db.Table(
+    'role_permission',
+    db.Column(
+        'role_id', db.Integer,
+        db.ForeignKey('role.id', ondelete="cascade"),
+        primary_key=True
+    ),
+    db.Column(
+        'permission_id', db.Integer,
+        db.ForeignKey('permission.id'),
+        primary_key=True
+    )
+)
+
 
 class Permission(BaseDbModel):
     """Permissions"""
@@ -8,6 +22,10 @@ class Permission(BaseDbModel):
     slug = db.Column(db.String, nullable=False, unique=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
+    role = db.relationship(
+        'Role', secondary=role_permission,
+        backref=db.backref('permissions', lazy=True)
+    )
 
     """
     format()

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
 from limbook_api.v1.roles import Role, filter_roles, \
-    validate_role_data, validate_role_update_data
+    validate_role_data, validate_role_update_data, get_permission_list_using_ids
 
 roles = Blueprint('roles', __name__)
 
@@ -33,6 +33,25 @@ def get_roles():
             ],
             'total': filter_roles(count_only=True),
             'query_args': request.args,
+        })
+    except Exception as e:
+        abort(400)
+
+
+@roles.route("/roles/<int:role_id>", methods=['GET'])
+@requires_auth('read:roles')
+def get_role(role_id):
+    """ Get role by id
+
+        Returns:
+            success (boolean)
+            role (list)
+    """
+    try:
+        role = Role.query.first_or_404(role_id)
+        return jsonify({
+            'success': True,
+            'role': role.format()
         })
     except Exception as e:
         abort(400)
@@ -105,8 +124,7 @@ def update_roles(role_id):
         abort(400)
 
 
-@roles.route(
-    "/roles/<int:role_id>", methods=['DELETE'])
+@roles.route("/roles/<int:role_id>", methods=['DELETE'])
 @requires_auth('delete:roles')
 def delete_roles(role_id):
     """ Delete roles
@@ -131,6 +149,50 @@ def delete_roles(role_id):
         return jsonify({
             "success": True,
             "deleted_id": role.id
+        })
+    except Exception as e:
+        abort(400)
+
+
+@roles.route("/roles/<int:role_id>/permissions", methods=['POST'])
+@requires_auth(['create:roles', 'update:roles'])
+def assign_permissions(role_id):
+    """ Assign permissions to role
+
+        Parameters:
+            role_id (int): Id of role
+
+        Post data:
+            permission_ids (list)
+
+        Returns:
+            success (boolean)
+            role (dict)
+    """
+    # vars
+    role = Role.query.first_or_404(role_id)
+
+    # TODO: implement this
+    # can delete own role only
+    # if role.id != auth_role_id():
+    #     abort(403)
+
+    # remove old permissions if exists
+    for permission in role.permissions:
+        permission.delete()
+
+    # attach new permissions
+    data = request.get_json()
+    permission_ids = data.get('permission_ids')
+    permissions = get_permission_list_using_ids(permission_ids)
+
+    try:
+        role.permissions = permissions
+        role.update()
+
+        return jsonify({
+            "success": True,
+            "role": role.format()
         })
     except Exception as e:
         abort(400)

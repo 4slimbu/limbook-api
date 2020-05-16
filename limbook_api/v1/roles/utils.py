@@ -6,6 +6,7 @@ from sqlalchemy import or_
 
 from limbook_api.db.utils import filter_model
 from limbook_api.errors.validation_error import ValidationError
+from limbook_api.v1.permissions import Permission, generate_permission
 from limbook_api.v1.roles import Role
 
 fake = Faker()
@@ -18,7 +19,8 @@ def generate_role(slug=None, name=None, description=None):
         'slug': slug if slug else 'role_' + str(randint(1000, 9999)),
         'name': name if name else 'Role ' + str(randint(1000, 9999)),
         'description': description if description
-        else 'Description ' + str(randint(1000, 9999))
+        else 'Description ' + str(randint(1000, 9999)),
+        'permissions': [generate_permission(), generate_permission()]
     })
 
     role.insert()
@@ -90,3 +92,15 @@ def filter_roles(count_only=False):
 
     # return filtered data
     return filter_model(Role, query, count_only=count_only)
+
+
+def get_permission_list_using_ids(permission_ids):
+    permissions = []
+    for permission_id in permission_ids:
+        permission = Permission.query.filter(
+            Permission.id == permission_id
+        ).first_or_404()
+
+        permissions.append(permission)
+
+    return permissions

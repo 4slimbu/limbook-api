@@ -13,6 +13,14 @@ class User(BaseDbModel):
     profile_picture = db.Column(db.String, nullable=True)
     cover_picture = db.Column(db.String, nullable=True)
     password = db.Column(db.String, nullable=False)
+    role_id = db.Column(
+        db.Integer, db.ForeignKey('role.id'),
+        nullable=False
+    )
+    role = db.relationship(
+        'Role', backref='users', uselist=False,
+        lazy=True
+    )
 
     """
     format()
@@ -28,6 +36,9 @@ class User(BaseDbModel):
             'phone_number': self.phone_number,
             'profile_picture': self.profile_picture,
             'cover_picture': self.cover_picture,
+            'role_id': self.role_id,
+            'role': self.role.slug,
+            'permissions': [p.slug for p in self.role.permissions],
             'created_on': self.created_on.__str__(),
             'updated_on': self.updated_on.__str__(),
         }

@@ -19,6 +19,9 @@ class Role(BaseDbModel):
             'slug': self.slug,
             'name': self.name,
             'description': self.description,
+            'permissions': [
+                permission.format() for permission in self.permissions
+            ],
             'created_on': self.created_on.__str__(),
             'updated_on': self.updated_on.__str__(),
         }

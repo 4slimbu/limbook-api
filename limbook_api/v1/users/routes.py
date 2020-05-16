@@ -58,20 +58,10 @@ def create_users():
             user (dict)
     """
     # vars
-    data = request.get_json()
-
-    validate_user_data(data)
+    data = validate_user_data(request.get_json())
 
     # create user
-    user = User(**{
-        'first_name': data.get('first_name'),
-        'last_name': data.get('last_name'),
-        'email': data.get('email'),
-        'phone_number': data.get('phone_number'),
-        'password': data.get('password'),
-        'profile_picture': data.get('profile_picture'),
-        'cover_picture': data.get('cover_picture'),
-    })
+    user = User(**data)
 
     try:
         user.insert()
@@ -101,6 +91,7 @@ def update_users(user_id):
             confirm_password (string)
             profile_picture (string)
             cover_picture (string)
+            role_id (int)
 
         Returns:
             success (boolean)

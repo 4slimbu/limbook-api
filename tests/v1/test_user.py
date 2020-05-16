@@ -2,6 +2,7 @@ from unittest import main
 
 from flask import json
 
+from limbook_api.v1.roles import generate_role
 from limbook_api.v1.users import generate_user, User
 from tests.base import BaseTestCase, api_base
 
@@ -85,6 +86,7 @@ class UsersTestCase(BaseTestCase):
 
     def test_can_create_users(self):
         # given
+        role = generate_role()
         user = {
             "first_name": "John",
             "last_name": "Doe",
@@ -92,6 +94,7 @@ class UsersTestCase(BaseTestCase):
             "phone_number": "9982938838",
             "password": "password",
             "confirm_password": "password",
+            "role_id": role.id,
             "profile_picture": "http://dummyimages.com/200/200",
             "cover_picture": "http://dummyimages.com/1000/500"
         }
@@ -149,6 +152,30 @@ class UsersTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('deleted_id'), user.id)
 
+    # User-role-permission tests ---------------------------
+    def test_can_assign_role_to_user(self):
+        # given
+        role = generate_role()
+        user = generate_user()
+        update_data = {
+            "role_id": role.id
+        }
+
+        # make request
+        res = self.client().patch(
+            api_base
+            + '/users/' + str(user.id)
+            + '?mock_token_verification=True&permission=update:users',
+            json=update_data
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(
+            data.get('user').get('role_id'),
+            update_data.get('role_id')
+        )
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
