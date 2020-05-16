@@ -4,7 +4,7 @@ from flask import json
 
 from limbook_api.v1.comments import generate_comment
 from limbook_api.v1.posts import generate_post
-from tests.base import BaseTestCase, test_user_id, api_base
+from tests.base import BaseTestCase, test_user_id, api_base, pagination_limit
 
 
 class CommentsTestCase(BaseTestCase):
@@ -60,7 +60,7 @@ class CommentsTestCase(BaseTestCase):
     def test_can_get_comments(self):
         # given
         post = generate_post()
-        comment = generate_comment(
+        generate_comment(
             user_id=test_user_id,
             post_id=post.id
         )
@@ -75,7 +75,31 @@ class CommentsTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data.get('comments')[0], comment.format())
+        self.assertEqual(len(data.get('comments')), 1)
+
+    def test_comment_pagination(self):
+        # given
+        post = generate_post()
+        for i in range(0, 25):
+            generate_comment(
+                user_id=test_user_id,
+                post_id=post.id
+            )
+
+        # make request
+        res = self.client().get(
+            api_base
+            + '/posts/' + str(post.id) + '/comments'
+            + '?mock_token_verification=True&permission=read:comments'
+            + '&page=2'
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(data.get('comments')), pagination_limit)
+        self.assertEqual(data.get('total'), 25)
+        self.assertEqual(len(data.get('query_args')), 3)
 
     def test_can_create_comments(self):
         # given
@@ -94,15 +118,12 @@ class CommentsTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data.get('comments')[0]['content'], comment['content'])
+        self.assertTrue(
+            data.get('comment').get('content'), comment.get('content'))
         self.assertEqual(
-            data.get('comments')[0]['user_id'],
-            test_user_id
-        )
+            data.get('comment').get('user_id'), test_user_id)
         self.assertEqual(
-            data.get('comments')[0]['post_id'],
-            post_id
-        )
+            data.get('comment').get('post_id'), post_id)
 
     def test_can_update_comments(self):
         # given
@@ -127,8 +148,8 @@ class CommentsTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertEqual(
-            data.get('comments')[0]['content'],
-            updated_comment_content['content']
+            data.get('comment').get('content'),
+            updated_comment_content.get('content')
         )
 
     def test_can_delete_comments(self):
@@ -149,7 +170,7 @@ class CommentsTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data.get('deleted_comment'), comment.format())
+        self.assertEqual(data.get('deleted_id'), comment.id)
 
     def test_can_reply_to_comment(self):
         # given
@@ -180,7 +201,7 @@ class CommentsTestCase(BaseTestCase):
             "parent_id": comment_id
         }
         self.assertEqual(res.status_code, 200)
-        self.assertTrue(expected_reply.items() <= data.get('reply').items())
+        self.assertTrue(expected_reply.items() <= data.get('comment').items())
 
     def test_reply_are_one_level_deep(self):
         """
@@ -205,33 +226,33 @@ class CommentsTestCase(BaseTestCase):
         data = json.loads(res.data)
 
         # assert
-        self.assertTrue(data.get('reply').get('parent_id') == comment_id)
+        self.assertTrue(data.get('comment').get('parent_id') == comment_id)
 
         # reply to reply
         res = self.client().post(
             api_base
             + '/posts/' + str(post_id)
-            + '/comments/' + str(data.get('reply').get('id')) + '/replies'
+            + '/comments/' + str(data.get('comment').get('id')) + '/replies'
             + '?mock_token_verification=True&permission=create:comments',
             json=reply
         )
         data = json.loads(res.data)
 
         # assert
-        self.assertTrue(data.get('reply').get('parent_id') == comment_id)
+        self.assertTrue(data.get('comment').get('parent_id') == comment_id)
 
         # reply to reply of reply
         res = self.client().post(
             api_base
             + '/posts/' + str(post_id)
-            + '/comments/' + str(data.get('reply').get('id')) + '/replies'
+            + '/comments/' + str(data.get('comment').get('id')) + '/replies'
             + '?mock_token_verification=True&permission=create:comments',
             json=reply
         )
         data = json.loads(res.data)
 
         # assert
-        self.assertTrue(data.get('reply').get('parent_id') == comment_id)
+        self.assertTrue(data.get('comment').get('parent_id') == comment_id)
 
 
 # Make the tests conveniently executable

@@ -36,7 +36,7 @@ class ReactsTestCase(BaseTestCase):
         post = generate_post()
         post_id = post.id
 
-        # make request
+        # react post
         res = self.client().post(
             api_base
             + '/posts/' + str(post_id) + '/reacts/toggle'
@@ -48,7 +48,7 @@ class ReactsTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(data.get('post').get('reacts')), 1)
 
-        # make request
+        # unreact post
         res = self.client().post(
             api_base
             + '/posts/' + str(post_id) + '/reacts/toggle'

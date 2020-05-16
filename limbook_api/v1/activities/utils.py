@@ -31,23 +31,21 @@ def generate_activity(user_id=None, action=None, post_id=None):
 
 def validate_activity_data(data):
     # check if activity attributes are present
-    if not data.get('content'):
+    if not data.get('action'):
         abort(422)
 
 
 def filter_activities(count_only=False):
-    filters = {}
+    query = Activity.query
 
     # add search filter
     if request.args.get('search_term'):
-        filters['search'] = {
-            'search': Activity.action.ilike(
+        query = query.filter(Activity.action.ilike(
                 "%{}%".format(request.args.get('search_term'))
-            ),
-        }
+            ))
 
-    # filter only current user data
-    filters['user_id'] = Activity.user_id == auth_user_id()
+    # activity belongs to user
+    query = query.filter(Activity.user_id == auth_user_id())
 
     # return filtered data
-    return filter_model(Activity, filters, count_only=count_only)
+    return filter_model(Activity, query, count_only=count_only)

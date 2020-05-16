@@ -17,12 +17,15 @@ def get_activities():
         Returns:
             success (boolean)
             activities (list)
-            total_activities (int)
+            total (int)
+            query_args (dict)
     """
     try:
         return jsonify({
             'success': True,
-            'activities': [activity.format() for activity in filter_activities()],
+            'activities': [
+                activity.format() for activity in filter_activities()
+            ],
             'total': filter_activities(count_only=True),
             'query_args': request.args,
         })

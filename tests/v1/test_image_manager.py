@@ -6,7 +6,7 @@ from flask import json
 
 from limbook_api.v1.image_manager import generate_img_in_bytes, generate_image
 from limbook_api.v1.posts import generate_post
-from tests.base import BaseTestCase, test_user_id, api_base
+from tests.base import BaseTestCase, test_user_id, api_base, pagination_limit
 
 
 class ImageManagerTestCase(BaseTestCase):
@@ -69,15 +69,16 @@ class ImageManagerTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(data.get('images')), 0)
-        self.assertEqual(data.get('images_count'), 0)
+        self.assertEqual(data.get('total'), 0)
 
-    def test_can_retrieve_own_images(self):
-        """ I can retrieve all my images """
+    def test_can_retrieve_own_images_with_pagination(self):
+        """ I can retrieve all my images with pagination"""
         # given
-        image1 = generate_image(user_id=test_user_id)
-        image2 = generate_image(user_id=test_user_id)
-        image3 = generate_image()
-        image4 = generate_image()
+        for i in range(0, 15):
+            generate_image(user_id=test_user_id)
+
+        for i in range(0, 15):
+            generate_image()
 
         # make request
         res = self.client().get(
@@ -89,8 +90,9 @@ class ImageManagerTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(len(data.get('images')), 2)
-        self.assertEqual(data.get('images_count'), 2)
+        self.assertEqual(len(data.get('images')), pagination_limit)
+        self.assertEqual(data.get('total'), 15)
+        self.assertEqual(len(data.get('query_args')), 2)
 
     def test_cannot_upload_invalid_image(self):
         # given
@@ -265,13 +267,13 @@ class ImageManagerTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('success'), True)
-        self.assertEqual(data.get('deleted_image'), image)
+        self.assertEqual(data.get('deleted_id'), image.get('id'))
         self.assertFalse(
-            os.path.isfile(data.get('deleted_image').get('url').get('large')))
+            os.path.isfile(image.get('url').get('large')))
         self.assertFalse(
-            os.path.isfile(data.get('deleted_image').get('url').get('medium')))
+            os.path.isfile(image.get('url').get('medium')))
         self.assertFalse(
-            os.path.isfile(data.get('deleted_image').get('url').get('thumb')))
+            os.path.isfile(image.get('url').get('thumb')))
 
     # -------------------------------------------------
     # Test involving posts
@@ -377,8 +379,7 @@ class ImageManagerTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data.get('deleted_post').get('id'), post_with_image.get('id'))
-        self.assertEqual(len(data.get('deleted_post').get('images')), 0)
+        self.assertEqual(data.get('deleted_id'), post_with_image.get('id'))
         self.assertFalse(
             os.path.isfile(image.get('url').get('large')))
         self.assertFalse(

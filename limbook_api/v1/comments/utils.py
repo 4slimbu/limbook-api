@@ -1,7 +1,9 @@
 from random import randint
 
-from flask import jsonify, abort
+from flask import jsonify, abort, request
 
+from limbook_api.db.utils import filter_model
+from limbook_api.v1.auth import auth_user_id
 from limbook_api.v1.comments import Comment
 
 
@@ -24,20 +26,16 @@ def validate_comment_data(data):
         abort(422)
 
 
-def get_all_comments_in_json(post_id):
-    # get comments
-    comments = Comment.query.filter(Comment.post_id == post_id).all()
-    # get count
-    comments_count = Comment.query.filter(Comment.post_id == post_id).count()
+def filter_comments(post_id, count_only=False):
+    query = Comment.query
 
-    # format
-    data = []
-    for comment in comments:
-        data.append(comment.format())
+    # search
+    search_term = request.args.get('search_term')
+    if search_term:
+        query = query.filter(Comment.content.ilike("%{}%".format(search_term)))
 
-    # return the result
-    return jsonify({
-        'success': True,
-        'comments': data,
-        'comments_count': comments_count
-    })
+    # comment belongs to post
+    query = query.filter(Comment.post_id == post_id)
+
+    # return filtered data
+    return filter_model(Comment, query, count_only=count_only)

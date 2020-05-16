@@ -2,10 +2,9 @@ from unittest import main
 
 from flask import json
 
-from config_test import TestConfig
 from limbook_api.v1.activities import generate_activity
 from limbook_api.v1.posts import generate_post
-from tests.base import BaseTestCase, test_user_id, api_base
+from tests.base import BaseTestCase, test_user_id, api_base, pagination_limit
 
 
 class ActivitiesTestCase(BaseTestCase):
@@ -67,7 +66,7 @@ class ActivitiesTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(len(data.get('activities')), TestConfig.PAGINATION)
+        self.assertEqual(len(data.get('activities')), pagination_limit)
         self.assertEqual(len(data.get('query_args')), 3)
         self.assertEqual(data.get('total'), 30)
 

@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
-from limbook_api.v1.posts import Post, get_all_posts_in_json, validate_post_data
+from limbook_api.v1.posts import Post, validate_post_data, filter_posts, \
+    get_images_list_using_ids
 
 posts = Blueprint('posts', __name__)
 
@@ -17,10 +18,18 @@ def get_posts():
         Returns:
             success (boolean)
             posts (list)
-            total_posts (int)
+            total (int)
+            query_args (dic)
     """
     try:
-        return get_all_posts_in_json()
+        return jsonify({
+            'success': True,
+            'posts': [
+                post.format() for post in filter_posts()
+            ],
+            'total': filter_posts(count_only=True),
+            'query_args': request.args,
+        })
     except Exception as e:
         abort(400)
 
@@ -30,14 +39,13 @@ def get_posts():
 def create_posts():
     """ Create new posts
 
-        Internal Parameters:
+        Post data:
             content (string): Content for the post
-            user_id (string): Internal parameter extracted from current_user
+            image_ids (list|optional): Ids of uploaded images
 
         Returns:
             success (boolean)
-            posts (list)
-            total_posts (int)
+            post (list)
     """
     # vars
     data = request.get_json()
@@ -52,7 +60,18 @@ def create_posts():
 
     try:
         post.insert()
-        return get_all_posts_in_json()
+
+        # attach images
+        image_ids = data.get('image_ids')
+        if image_ids:
+            images = get_images_list_using_ids(image_ids)
+            post.images = images
+            post.update()
+
+        return jsonify({
+            "success": True,
+            "post": post.format()
+        })
     except Exception as e:
         abort(400)
 
@@ -65,9 +84,10 @@ def update_posts(post_id):
         Parameters:
             post_id (int): Id of post
 
-        Internal Parameters:
-            content (string): Content for the post
-            user_id (string): Internal parameter extracted from current_user
+        Patch data:
+            content (string|optional): Content for the post
+            image_ids (list|optional):
+                Internal parameter extracted from current_user
 
         Returns:
             success (boolean)
@@ -77,8 +97,6 @@ def update_posts(post_id):
     # vars
     data = request.get_json()
 
-    validate_post_data(data)
-
     # get post
     post = Post.query.first_or_404(post_id)
 
@@ -86,12 +104,29 @@ def update_posts(post_id):
     if post.user_id != auth_user_id():
         abort(403)
 
-    # update post
-    post.content = data.get('content')
-
     try:
-        post.update()
-        return get_all_posts_in_json()
+        # update post
+        content = data.get('content')
+        if content:
+            post.content = data.get('content')
+            post.update()
+
+        # update images
+        image_ids = data.get('image_ids')
+        if image_ids:
+            # delete images
+            for image in post.images:
+                image.delete()
+
+            # attach images
+            images = get_images_list_using_ids(image_ids)
+            post.images = images
+            post.update()
+
+        return jsonify({
+            "success": True,
+            "post": post.format()
+        })
     except Exception as e:
         abort(400)
 
@@ -128,7 +163,7 @@ def delete_posts(post_id):
 
         return jsonify({
             "success": True,
-            "deleted_post": post.format()
+            "deleted_id": post.id
         })
     except Exception as e:
         abort(400)

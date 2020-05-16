@@ -7,6 +7,7 @@ from PIL import Image as PImage
 from flask import current_app, json, abort, jsonify
 from werkzeug.utils import secure_filename
 
+from limbook_api.db.utils import filter_model
 from limbook_api.v1.auth import auth_user_id
 from limbook_api.errors import ImageUploadError
 from limbook_api.v1.image_manager import Image
@@ -112,20 +113,11 @@ def validate_image_data(data):
         abort(422)
 
 
-def get_all_user_images_in_json():
-    # get images
-    images = Image.query.filter(Image.user_id == auth_user_id()).all()
-    # get count
-    images_count = Image.query.filter(Image.user_id == auth_user_id()).count()
+def filter_images(count_only=False):
+    query = Image.query
 
-    # format
-    data = []
-    for image in images:
-        data.append(image.format())
+    # Filter current user's images
+    query = query.filter(Image.user_id == auth_user_id())
 
-    # return the result
-    return jsonify({
-        'success': True,
-        'images': data,
-        'images_count': images_count
-    })
+    # return filtered data
+    return filter_model(Image, query, count_only=count_only)

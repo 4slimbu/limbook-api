@@ -1,50 +1,54 @@
 from random import randint
 
-from flask import jsonify
 from sqlalchemy import or_
 
+from limbook_api.db.utils import filter_model
 from limbook_api.v1.auth import auth_user_id
 from limbook_api.v1.friends import Friend
 
 
-def generate_friend(requester_id=None, receiver_id=None, is_friend=None):
+def generate_friend_request(requester_id=None, receiver_id=None):
+    return generate_friend(requester_id, receiver_id, is_friend=False)
+
+
+def generate_friend(requester_id=None, receiver_id=None, is_friend=True):
     """Generates new friend with random attributes for testing
     """
     friend = Friend(**{
         'requester_id': requester_id if requester_id else str(randint(1000, 9999)),
         'receiver_id': receiver_id if receiver_id else str(randint(1000, 9999)),
-        'is_friend': is_friend if is_friend else False
+        'is_friend': is_friend
     })
 
     friend.insert()
     return friend
 
 
-def get_all_friends_in_json():
-    # get friends
-    friends = Friend.query.filter(
-        or_(
-            Friend.requester_id == auth_user_id(),
+def filter_friends(request_only=False, count_only=False):
+    query = Friend.query
+
+    # is friends
+    if request_only:
+        # filter requests only
+        query = query.filter(Friend.is_friend == False)
+
+        # request received by current user
+        query = query.filter(
             Friend.receiver_id == auth_user_id()
         )
-    ).all()
 
-    # get count
-    friends_count = Friend.query.filter(
-        or_(
-            Friend.requester_id == auth_user_id(),
-            Friend.receiver_id == auth_user_id()
+    else:
+        # filter friends only
+        query = query.filter(Friend.is_friend == True)
+
+        # get friends
+        query = query.filter(
+            or_(
+                Friend.requester_id == auth_user_id(),
+                Friend.receiver_id == auth_user_id()
+            )
         )
-    ).count()
 
-    # format
-    data = []
-    for friend in friends:
-        data.append(friend.format())
+    # return filtered data
+    return filter_model(Friend, query, count_only=count_only)
 
-    # return the result
-    return jsonify({
-        'success': True,
-        'friends': data,
-        'friends_count': friends_count
-    })

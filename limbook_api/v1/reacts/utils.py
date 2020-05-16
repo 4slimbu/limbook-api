@@ -1,5 +1,6 @@
 from random import randint
 
+from limbook_api.db.utils import filter_model
 from limbook_api.v1.reacts import React
 
 
@@ -13,3 +14,13 @@ def generate_react(user_id=None, post_id=None):
 
     react.insert()
     return react
+
+
+def filter_reacts(post_id, count_only=False):
+    query = React.query
+
+    # React always belongs to post
+    query = query.filter(React.post_id == post_id)
+
+    # return filtered data
+    return filter_model(React, query, count_only=count_only)
