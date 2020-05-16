@@ -1,6 +1,7 @@
 from flask import jsonify
 
 from limbook_api import AuthError, ImageUploadError
+from limbook_api.errors.validation_error import ValidationError
 
 
 def register_error_handlers(app):
@@ -25,6 +26,16 @@ def register_error_handlers(app):
             "error": error.status_code,
             "error_code": error.error.get('code'),
             "message": error.error.get('description')
+        }), error.status_code
+
+    @app.errorhandler(ValidationError)
+    def validation_error(error):
+        return jsonify({
+            "success": False,
+            "error": error.status_code,
+            "error_code": error.error.get('code'),
+            "message": error.error.get('description'),
+            "errors": error.error.get('errors')
         }), error.status_code
 
     @app.errorhandler(401)
