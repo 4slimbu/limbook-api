@@ -1,8 +1,8 @@
-from flask import Blueprint, jsonify, abort
+from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
-from limbook_api.v1.posts import Post, get_all_post_reacts_in_json
-from limbook_api.v1.reacts import React
+from limbook_api.v1.posts import Post
+from limbook_api.v1.reacts import React, filter_reacts
 
 reacts = Blueprint('reacts', __name__)
 
@@ -21,30 +21,34 @@ def get_post_reacts(post_id):
         Returns:
             success (boolean)
             reacts (list)
-            total_reacts (int)
+            total (int)
+            query_args (dict)
     """
     try:
-        return get_all_post_reacts_in_json(post_id)
+        return jsonify({
+            'success': True,
+            'images': [
+                image.format() for image in filter_reacts(post_id)
+            ],
+            'total': filter_reacts(post_id, count_only=True),
+            'query_args': request.args,
+        })
     except Exception as e:
         abort(400)
 
 
 @reacts.route("/posts/<int:post_id>/reacts/toggle", methods=['POST'])
 # TODO: fix caps on Create:reacts and use it
-@requires_auth('update:reacts')
-def create_post_reacts(post_id):
+@requires_auth(['create:reacts', 'update:reacts', 'manage_reacts'])
+def toggle_post_reacts(post_id):
     """ Create new react or delete if exist
 
         Parameters:
             post_id (int): Id of post to which react will belong
 
-        Internal Parameters:
-            user_id (string): Internal parameter extracted from current_user
-
         Returns:
             success (boolean)
-            reacts (list)
-            total_reacts (int)
+            react (list)
     """
     try:
 

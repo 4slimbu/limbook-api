@@ -1,8 +1,9 @@
 from os import abort
 from random import randint
 
-from flask import jsonify
+from flask import jsonify, request
 
+from limbook_api.db.utils import filter_model
 from limbook_api.v1.auth import auth_user_id
 from limbook_api.v1.image_manager import Image
 from limbook_api.v1.posts import Post
@@ -28,23 +29,19 @@ def get_images_list_using_ids(image_ids):
     return images
 
 
-def get_all_posts_in_json():
-    # get posts
-    posts = Post.query.all()
-    # get count
-    posts_count = Post.query.count()
+def filter_posts(count_only=False):
+    query = Post.query
 
-    # format
-    data = []
-    for post in posts:
-        data.append(post.format())
+    # add search filter
+    if request.args.get('search_term'):
+        query = query.filter(Post.content.ilike(
+                "%{}%".format(request.args.get('search_term'))
+            ))
 
-    # return the result
-    return jsonify({
-        'success': True,
-        'posts': data,
-        'posts_count': posts_count
-    })
+    # TODO: check to see if post is visible to user
+
+    # return filtered data
+    return filter_model(Post, query, count_only=count_only)
 
 
 def validate_react_data(data):
@@ -79,12 +76,13 @@ def get_all_post_reacts_in_json(post_id, user_id):
     })
 
 
-def generate_post(content=None, user_id=None):
+def generate_post(content=None, user_id=None, images=None):
     """Generates new post with random attributes for testing
     """
     post = Post(**{
         'content': content if content else 'Post ' + str(randint(1000, 9999)),
-        'user_id': user_id if user_id else str(randint(1000, 9999))
+        'user_id': user_id if user_id else str(randint(1000, 9999)),
+        'images': images if images else []
     })
 
     post.insert()

@@ -9,6 +9,9 @@ class Config:
     # App secret
     SECRET_KEY = "my_secret_key"
 
+    # Pagination
+    PAGINATION = 10
+
     # -------------------------------------------
     # Database
     # -------------------------------------------
@@ -37,7 +40,7 @@ class Config:
     }
 
     # Image upload directory
-    IMG_UPLOAD_DIR = 'static/img/uploads'
+    IMG_UPLOAD_DIR = 'limbook_api/static/img/uploads'
 
     # -------------------------------------------
     # Email

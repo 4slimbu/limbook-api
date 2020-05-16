@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
-from limbook_api.v1.comments import Comment, get_all_comments_in_json, \
+from limbook_api.v1.comments import Comment, filter_comments, \
     validate_comment_data
 
 comments = Blueprint('comments', __name__)
@@ -15,16 +15,25 @@ comments = Blueprint('comments', __name__)
 def get_comments(post_id):
     """ Get all available comments
 
-        Parameters:
-             post_id (int): Id of post to which comments belong to
+        Query Parameters:
+             search_term (str)
+             page (int)
 
         Returns:
             success (boolean)
             comments (list)
-            total_comments (int)
+            total (int)
+            query_args (dict)
     """
     try:
-        return get_all_comments_in_json(post_id)
+        return jsonify({
+            'success': True,
+            'comments': [
+                comment.format() for comment in filter_comments(post_id)
+            ],
+            'total': filter_comments(post_id, count_only=True),
+            'query_args': request.args,
+        })
     except Exception as e:
         abort(400)
 
@@ -37,14 +46,12 @@ def create_comments(post_id):
         Parameters:
             post_id (int): Id of post to which comment will belong
 
-        Internal Parameters:
+        Post data:
             content (string): Content for the comment
-            user_id (string): Internal parameter extracted from current_user
 
         Returns:
             success (boolean)
-            comments (list)
-            total_comments (int)
+            comment (dict)
     """
     # vars
     data = request.get_json()
@@ -60,12 +67,17 @@ def create_comments(post_id):
 
     try:
         comment.insert()
-        return get_all_comments_in_json(post_id)
+
+        return jsonify({
+            "success": True,
+            "comment": comment.format()
+        })
     except Exception as e:
         abort(400)
 
 
-@comments.route("/posts/<int:post_id>/comments/<int:comment_id>", methods=['PATCH'])
+@comments.route(
+    "/posts/<int:post_id>/comments/<int:comment_id>", methods=['PATCH'])
 @requires_auth('update:comments')
 def update_comments(post_id, comment_id):
     """ Update comments
@@ -74,9 +86,8 @@ def update_comments(post_id, comment_id):
             post_id (int): Id of post to which comment belong
             comment_id (int): Id of comment
 
-        Internal Parameters:
+        Patch data:
             content (string): Content for the comment
-            user_id (string): Internal parameter extracted from current_user
 
         Returns:
             success (boolean)
@@ -100,12 +111,16 @@ def update_comments(post_id, comment_id):
 
     try:
         comment.update()
-        return get_all_comments_in_json(post_id)
+        return jsonify({
+            "success": True,
+            "comment": comment.format()
+        })
     except Exception as e:
         abort(400)
 
 
-@comments.route("/posts/<int:post_id>/comments/<int:comment_id>", methods=['DELETE'])
+@comments.route(
+    "/posts/<int:post_id>/comments/<int:comment_id>", methods=['DELETE'])
 @requires_auth('delete:comments')
 def delete_comments(post_id, comment_id):
     """ Delete comments
@@ -114,13 +129,9 @@ def delete_comments(post_id, comment_id):
             post_id (int): Id of post on which comment was made
             comment_id (int): Id of comment
 
-        Internal Parameters:
-            user_id (string): Internal parameter extracted from current_user
-
         Returns:
             success (boolean)
-            comments: (list)
-            deleted_comment (dict)
+            deleted_id (int)
     """
     # vars
     comment = Comment.query.first_or_404(comment_id)
@@ -133,16 +144,14 @@ def delete_comments(post_id, comment_id):
         comment.delete()
         return jsonify({
             "success": True,
-            "deleted_comment": comment.format()
+            "deleted_id": comment.id
         })
     except Exception as e:
         abort(400)
 
 
 @comments.route(
-    "/posts/<int:post_id>/comments/<int:comment_id>/replies",
-    methods=['POST']
-)
+    "/posts/<int:post_id>/comments/<int:comment_id>/replies", methods=['POST'])
 @requires_auth('create:comments')
 def reply_comments(post_id, comment_id):
     """ Reply comments
@@ -151,8 +160,8 @@ def reply_comments(post_id, comment_id):
             post_id (int): Id of post on which comment was made
             comment_id (int): Id of comment
 
-        Internal Parameters:
-            user_id (string): Internal parameter extracted from current_user
+        Post Data:
+            content (string): reply content
 
         Returns:
             success (boolean)
@@ -177,7 +186,7 @@ def reply_comments(post_id, comment_id):
 
         return jsonify({
             "success": True,
-            "reply": reply.format()
+            "comment": reply.format()
         })
     except Exception as e:
         abort(400)

@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, abort, request
+from sqlalchemy import or_
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
-from limbook_api.v1.friends import Friend
-from limbook_api.v1.friends import get_all_friends_in_json
+from limbook_api.v1.friends import Friend, filter_friends
 
 friends = Blueprint('friends', __name__)
 
@@ -18,33 +18,70 @@ def get_friends():
         Returns:
             success (boolean)
             friends (list)
-            total_friends (int)
+            total (int)
+            query_args (dict)
     """
     try:
-        return get_all_friends_in_json()
+        return jsonify({
+            'success': True,
+            'friends': [
+                friend.format() for friend in filter_friends()
+            ],
+            'total': filter_friends(count_only=True),
+            'query_args': request.args,
+        })
+
     except Exception as e:
         abort(400)
 
 
-@friends.route("/friends", methods=['POST'])
-@requires_auth('create:friends')
-def create_friends():
-    """ Create new friends
-
-        Internal Parameters:
-            user_id (string): Internal parameter extracted from current_user
+@friends.route("/friend-requests", methods=['GET'])
+@requires_auth('read:friends')
+def get_friend_requests():
+    """ Get all friend requests
 
         Returns:
             success (boolean)
+            friend-requests (list)
+            total (int)
+            query_args (dict)
+    """
+    try:
+        return jsonify({
+            'success': True,
+            'friend-requests': [
+                friend.format() for friend in filter_friends(request_only=True)
+            ],
+            'total': filter_friends(request_only=True, count_only=True),
+            'query_args': request.args,
+        })
+
+    except Exception as e:
+        abort(400)
+
+
+@friends.route("/friend-requests", methods=['POST'])
+@requires_auth('create:friends')
+def create_friend_requests():
+    """ Send friend request
+
+        Post data:
+            user_id (string): Id of user to send friend request
+
+        Returns:
+            success (boolean)
+            friend-request (dict)
     """
     data = request.get_json()
     receiver_id = data.get('user_id')
 
     # See if friend request already exists
     friend = Friend.query.filter(
-        Friend.receiver_id == receiver_id,
-        Friend.is_friend == False
-    ).first()
+        or_(
+            Friend.requester_id == auth_user_id(),
+            Friend.receiver_id == auth_user_id()
+        )
+    ).filter(Friend.is_friend == False).first()
 
     if friend is None:
         friend = Friend(**{
@@ -60,27 +97,27 @@ def create_friends():
 
         return jsonify({
             "success": True,
-            "friend": friend.format()
+            "friend-request": friend.format()
         })
 
     except Exception as e:
         abort(400)
 
 
-@friends.route("/friends/<friend_id>", methods=['PATCH'])
+@friends.route("/friend-requests/<friend_request_id>", methods=['PATCH'])
 @requires_auth('update:friends')
-def update_friends(friend_id):
+def update_friend_requests(friend_request_id):
     """ Update friends
 
         Parameters:
-            friend_id (string): Friend Id
+            friend_request_id (string): Friend Id
 
         Returns:
             success (boolean)
-            friend (dict)
+            friend-request (dict)
     """
 
-    friend = Friend.query.first_or_404(friend_id)
+    friend = Friend.query.first_or_404(friend_request_id)
 
     if friend.receiver_id != auth_user_id():
         abort(401)
@@ -95,7 +132,7 @@ def update_friends(friend_id):
 
         return jsonify({
             "success": True,
-            "friend": friend.format()
+            "friend-request": friend.format()
         })
 
     except Exception as e:
@@ -107,12 +144,15 @@ def update_friends(friend_id):
 def delete_friends(friend_id):
     """ Delete friends
 
+        Delete friends and delete friend-requests are same. These two
+        methods exists for user's convenience.
+
         Parameters:
             friend_id (string): Friend Id
 
         Returns:
             success (boolean)
-            friend (dict)
+            deleted_id (string)
     """
 
     friend = Friend.query.first_or_404(friend_id)
@@ -133,3 +173,37 @@ def delete_friends(friend_id):
     except Exception as e:
         abort(400)
 
+
+@friends.route("/friend-requests/<friend_request_id>", methods=['DELETE'])
+@requires_auth('delete:friends')
+def delete_friend_requests(friend_request_id):
+    """ Delete friend request
+
+        Delete friends and delete friend-requests are same. These two
+        methods exists for user's convenience.
+
+        Parameters:
+            friend_request_id (string): Friend Id
+
+        Returns:
+            success (boolean)
+            deleted_id (string)
+    """
+
+    friend = Friend.query.first_or_404(friend_request_id)
+
+    # only friend requester or acceptor can terminate friendship
+    if friend.requester_id != auth_user_id() \
+            and friend.receiver_id != auth_user_id():
+        abort(401)
+
+    try:
+        friend.delete()
+
+        return jsonify({
+            "success": True,
+            "deleted_id": friend.id
+        })
+
+    except Exception as e:
+        abort(400)

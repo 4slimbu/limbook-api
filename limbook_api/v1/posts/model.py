@@ -22,6 +22,3 @@ class Post(BaseDbModel):
             'reacts': [react.format() for react in self.reacts],
             'comments': [comment.format() for comment in self.comments]
         }
-
-    def __repr__(self):
-        return json.dumps(self.format())

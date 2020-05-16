@@ -26,20 +26,25 @@ def get_token_auth_header():
     return header_parts[1]
 
 
-def check_permissions(permission, payload):
+def check_permissions(required_permission, payload):
     """ Check if required permission exists in the verified token's payload.
 
         Parameters:
-            permission (string): A string describing the type of permission.
-                e.g: get:drinks, post:drinks
+            required_permission (string|list):
+                A string describing the type of permission.
+                e.g: get:drinks, post:drinks, ['get:drinks', 'manage:drinks']
             payload (dict): Extracted token claims containing the allowed
                 permissions for the user.
 
         Returns:
             boolean: Whether user has the permission or not.
     """
-    permissions = payload.get('permissions')
-    if permissions and permission in permissions:
+    if isinstance(required_permission, str):
+        required_permission = [required_permission]
+
+    user_permissions = payload.get('permissions')
+    if user_permissions and \
+            len(list(set(required_permission) & set(user_permissions))) > 0:
         return True
 
     return False

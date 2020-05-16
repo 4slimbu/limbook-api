@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, abort, request, json
 
 from limbook_api.v1.auth import requires_auth, auth_user_id
 from limbook_api.v1.image_manager import Image, create_img_set, \
-    get_all_user_images_in_json, validate_image_data
+    validate_image_data, filter_images
 from limbook_api.v1.posts import Post, get_images_list_using_ids
 
 image_manager = Blueprint('image_manager', __name__)
@@ -16,15 +16,26 @@ image_manager = Blueprint('image_manager', __name__)
 def get_images():
     """ Update images
 
+        Query params:
+            page (int)
+            post_id (int)
+
         Returns:
             success (boolean)
             images (list): List of images
-            images_count (int)
+            total (int)
+            query_args (dict)
     """
 
     try:
-        # return the result
-        return get_all_user_images_in_json()
+        return jsonify({
+            'success': True,
+            'images': [
+                image.format() for image in filter_images()
+            ],
+            'total': filter_images(count_only=True),
+            'query_args': request.args,
+        })
     except Exception as e:
         abort(400)
 
@@ -105,7 +116,7 @@ def delete_images(image_id):
         Returns:
             success (boolean)
             images: (list)
-            deleted_image (dict)
+            delete_id (int)
     """
     # vars
     image = Image.query.first_or_404(image_id)
@@ -118,7 +129,7 @@ def delete_images(image_id):
         image.delete()
         return jsonify({
             "success": True,
-            "deleted_image": image.format()
+            "deleted_id": image.id
         })
     except Exception as e:
         abort(400)
@@ -132,7 +143,7 @@ def attach_images_to_post(post_id):
         Parameters:
             post_id (int): Id of post
 
-        Internal Parameters:
+        Post data:
             image_ids (list): List of image ids
 
         Returns:

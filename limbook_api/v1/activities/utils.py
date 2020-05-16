@@ -1,9 +1,11 @@
 from os import abort
 from random import randint
 
-from flask import jsonify
+from flask import request
 
+from limbook_api.db.utils import filter_model
 from limbook_api.v1.activities import Activity
+from limbook_api.v1.auth import auth_user_id
 
 
 def generate_activity(user_id=None, action=None, post_id=None):
@@ -29,24 +31,21 @@ def generate_activity(user_id=None, action=None, post_id=None):
 
 def validate_activity_data(data):
     # check if activity attributes are present
-    if not data.get('content'):
+    if not data.get('action'):
         abort(422)
 
 
-def get_all_activities_in_json(user_id):
-    # get activities
-    activities = Activity.query.filter(Activity.user_id == user_id).all()
-    # get count
-    activities_count = Activity.query.filter(Activity.user_id == user_id).count()
+def filter_activities(count_only=False):
+    query = Activity.query
 
-    # format
-    data = []
-    for activity in activities:
-        data.append(activity.format())
+    # add search filter
+    if request.args.get('search_term'):
+        query = query.filter(Activity.action.ilike(
+                "%{}%".format(request.args.get('search_term'))
+            ))
 
-    # return the result
-    return jsonify({
-        'success': True,
-        'activities': data,
-        'activities_count': activities_count
-    })
+    # activity belongs to user
+    query = query.filter(Activity.user_id == auth_user_id())
+
+    # return filtered data
+    return filter_model(Activity, query, count_only=count_only)
