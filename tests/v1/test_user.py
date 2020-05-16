@@ -3,8 +3,7 @@ from unittest import main
 from flask import json
 
 from limbook_api.v1.users import generate_user, User
-from limbook_api.v1.posts import generate_post
-from tests.base import BaseTestCase, test_user_id, api_base, pagination_limit
+from tests.base import BaseTestCase, api_base
 
 
 class UsersTestCase(BaseTestCase):

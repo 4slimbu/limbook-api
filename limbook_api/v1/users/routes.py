@@ -105,8 +105,6 @@ def update_users(user_id):
         Returns:
             success (boolean)
             user (dict)
-            total (int)
-            query_args (dict)
     """
     # vars
     data = validate_user_update_data(request.get_json())
