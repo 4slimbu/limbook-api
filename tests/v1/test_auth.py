@@ -5,8 +5,8 @@ from flask import json
 from tests.base import BaseTestCase, api_base
 
 
-class AuthTestCase(BaseTestCase):
-    """This class represents the test case for Authentication"""
+class UserTestCase(BaseTestCase):
+    """This class represents the test case for Users"""
 
     # Auth Tests ----------------------------------------
     def test_cannot_access_protected_route_without_token(self):
