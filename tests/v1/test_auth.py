@@ -269,6 +269,56 @@ class UserTestCase(BaseTestCase):
         self.assertNotEqual(data.get('refresh_token'), refresh_token)
 
 
+    def test_user_can_logout(self):
+        # login random user and get tokens
+        res = self.login_random_user()
+        data = json.loads(res.data)
+        access_token = data.get('access_token')
+        refresh_token = data.get('refresh_token')
+
+        headers = {'Authorization': 'Bearer ' + access_token}
+
+        # make request
+        res = self.client().post(
+            api_base
+            + '/logout',
+            json={
+                "access_token": access_token,
+                "refresh_token": refresh_token
+            },
+            headers=headers
+        )
+
+        # assert
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+
+        # make request after logout using the previous tokens
+        headers = {'Authorization': 'Bearer ' + access_token}
+
+        # make request
+        res = self.client().post(
+            api_base
+            + '/logout',
+            headers=headers
+        )
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'token_blacklisted')
+
+        # make request after logout using the previous tokens
+        headers = {'Authorization': 'Bearer ' + refresh_token}
+
+        # make request
+        res = self.client().post(
+            api_base
+            + '/logout',
+            headers=headers
+        )
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'token_blacklisted')
+
 # Make the tests conveniently executable
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 from flask_bcrypt import Bcrypt
+from flask_caching import Cache
 
 from config import Config
 from limbook_api.db import setup_db
@@ -8,7 +9,7 @@ from limbook_api.errors.error_handlers import register_error_handlers
 from limbook_api.v1 import register_v1_blueprints
 
 bcrypt = Bcrypt()
-
+cache = Cache()
 
 def create_app(config_class=Config):
     """ Creates the flask app"""
@@ -19,6 +20,9 @@ def create_app(config_class=Config):
 
     # setup database related extensions
     setup_db(app)
+
+    # setup flask caching
+    cache.init_app(app)
 
     # setup bcrypt
     bcrypt.init_app(app)

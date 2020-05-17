@@ -8,7 +8,7 @@ import jwt
 from flask import current_app, abort, request
 from jose import jwt
 
-from limbook_api import bcrypt, AuthError
+from limbook_api import bcrypt, AuthError, cache
 from limbook_api.v1.users import User, ValidationError
 from tests.base import mock_token_verification
 
@@ -290,6 +290,9 @@ def check_permissions(required_permission, payload):
         Returns:
             boolean: Whether user has the permission or not.
     """
+    if required_permission == '':
+        return True
+
     if isinstance(required_permission, str):
         required_permission = [required_permission]
 
@@ -326,6 +329,13 @@ def requires_auth(permission=''):
                 )
             else:
                 token = get_token_from_auth_header()
+
+                if is_token_blacklisted(token):
+                    raise AuthError({
+                        'code': 'token_blacklisted',
+                        'description': 'Token access has been revoked'
+                    }, 401)
+
                 payload = decode_token(token)
 
             current_app.config['payload'] = payload
@@ -349,3 +359,11 @@ def auth_user_id():
         abort(401)
 
     return payload.get('sub')
+
+
+def blacklist_token(token):
+    cache.set(token, "blacklisted", timeout=60*60)
+
+
+def is_token_blacklisted(token):
+    return cache.get(token) == 'blacklisted'
