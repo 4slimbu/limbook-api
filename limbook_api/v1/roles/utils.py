@@ -12,7 +12,7 @@ from limbook_api.v1.roles import Role
 fake = Faker()
 
 
-def generate_role(slug=None, name=None, description=None):
+def generate_role(slug=None, name=None, description=None, permissions=None):
     """Generates new role with random attributes for testing
     """
     role = Role(**{
@@ -20,7 +20,8 @@ def generate_role(slug=None, name=None, description=None):
         'name': name if name else 'Role ' + str(randint(1000, 9999)),
         'description': description if description
         else 'Description ' + str(randint(1000, 9999)),
-        'permissions': [generate_permission(), generate_permission()]
+        'permissions': permissions if permissions
+        else [generate_permission(), generate_permission()]
     })
 
     role.insert()
