@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 
-from limbook_api.v1.auth import requires_auth, auth_user_id
+from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.comments import Comment, filter_comments, \
     validate_comment_data
 

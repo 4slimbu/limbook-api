@@ -1,1 +1,1 @@
-from limbook_api.v1.auth.auth import *
+from limbook_api.v1.auth.utils import *

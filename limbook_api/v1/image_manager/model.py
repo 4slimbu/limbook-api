@@ -22,7 +22,7 @@ class Image(BaseDbModel):
 
     id = db.Column(db.Integer, primary_key=True)
     # owner id
-    user_id = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     # list of full path of image set (thumbnail, medium, large, full)
     url = db.Column(db.String, nullable=False)
 

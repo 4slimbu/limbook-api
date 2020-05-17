@@ -1,11 +1,16 @@
+import json
 import secrets
 from datetime import datetime, timedelta
+from functools import wraps
+from urllib.request import urlopen
 
 import jwt
 from flask import current_app, abort, request
+from jose import jwt
 
-from limbook_api import bcrypt, AuthError
+from limbook_api import bcrypt, AuthError, cache
 from limbook_api.v1.users import User, ValidationError
+from tests.base import mock_token_verification
 
 
 def validate_register_data(data):
@@ -184,7 +189,7 @@ def encode_auth_token(user, valid_seconds):
         payload = {
             'exp': datetime.utcnow() + timedelta(seconds=valid_seconds),
             'iat': datetime.utcnow(),
-            'sub': user.id,
+            'sub': str(user.id),
             'permissions': user.format().get('permissions'),
             # while testing, tokens are generated in quick succession and
             # for same payload, it is not possible to differentiate them
@@ -195,7 +200,7 @@ def encode_auth_token(user, valid_seconds):
             payload,
             current_app.config.get('SECRET_KEY'),
             algorithm='HS256'
-        ).decode('utf-8')
+        )
     except Exception as e:
         abort(500)
 
@@ -269,5 +274,96 @@ def decode_token(token):
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Unable to parse authentication token.'
-        }, 400)
+        }, 401)
 
+
+def check_permissions(required_permission, payload):
+    """ Check if required permission exists in the verified token's payload.
+
+        Parameters:
+            required_permission (string|list):
+                A string describing the type of permission.
+                e.g: get:drinks, post:drinks, ['get:drinks', 'manage:drinks']
+            payload (dict): Extracted token claims containing the allowed
+                permissions for the user.
+
+        Returns:
+            boolean: Whether user has the permission or not.
+    """
+    if required_permission == '':
+        return True
+
+    if isinstance(required_permission, str):
+        required_permission = [required_permission]
+
+    user_permissions = payload.get('permissions')
+    if user_permissions and \
+            len(list(set(required_permission) & set(user_permissions))) > 0:
+        return True
+
+    return False
+
+
+def requires_auth(permission=''):
+    """ Decorator method to check if user can access the resource.
+
+        Parameters:
+            permission (string): permission (i.e. 'post:drinks')
+
+        Returns:
+            function: Wrapped function with payload passed as argument.
+
+        Raises:
+            AuthError: Unable to provide access
+    """
+
+    def requires_auth_decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+
+            # TODO: find a better solution instead of this hack for testing
+            if current_app.config.get('TESTING') \
+                    and request.args.get('mock_token_verification') == 'True':
+                payload = mock_token_verification(
+                    permission=request.args.get('permission')
+                )
+            else:
+                token = get_token_from_auth_header()
+
+                if is_token_blacklisted(token):
+                    raise AuthError({
+                        'code': 'token_blacklisted',
+                        'description': 'Token access has been revoked'
+                    }, 401)
+
+                payload = decode_token(token)
+
+            current_app.config['payload'] = payload
+
+            if not check_permissions(permission, payload):
+                raise AuthError({
+                    'code': 'no_permission',
+                    'description': 'No Permission'
+                }, 401)
+
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return requires_auth_decorator
+
+
+def auth_user_id():
+    payload = current_app.config.get('payload')
+    if payload is None:
+        abort(401)
+
+    return payload.get('sub')
+
+
+def blacklist_token(token):
+    cache.set(token, "blacklisted", timeout=60*60)
+
+
+def is_token_blacklisted(token):
+    return cache.get(token) == 'blacklisted'

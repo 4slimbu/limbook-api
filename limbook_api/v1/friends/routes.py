@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, request
 from sqlalchemy import or_
 
-from limbook_api.v1.auth import requires_auth, auth_user_id
+from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.friends import Friend, filter_friends
 
 friends = Blueprint('friends', __name__)
@@ -104,7 +104,7 @@ def create_friend_requests():
         abort(400)
 
 
-@friends.route("/friend-requests/<friend_request_id>", methods=['PATCH'])
+@friends.route("/friend-requests/<int:friend_request_id>", methods=['PATCH'])
 @requires_auth('update:friends')
 def update_friend_requests(friend_request_id):
     """ Update friends
@@ -139,7 +139,7 @@ def update_friend_requests(friend_request_id):
         abort(400)
 
 
-@friends.route("/friends/<friend_id>", methods=['DELETE'])
+@friends.route("/friends/<int:friend_id>", methods=['DELETE'])
 @requires_auth('delete:friends')
 def delete_friends(friend_id):
     """ Delete friends
@@ -174,7 +174,7 @@ def delete_friends(friend_id):
         abort(400)
 
 
-@friends.route("/friend-requests/<friend_request_id>", methods=['DELETE'])
+@friends.route("/friend-requests/<int:friend_request_id>", methods=['DELETE'])
 @requires_auth('delete:friends')
 def delete_friend_requests(friend_request_id):
     """ Delete friend request

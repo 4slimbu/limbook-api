@@ -8,7 +8,7 @@ from flask import current_app, json, abort, jsonify
 from werkzeug.utils import secure_filename
 
 from limbook_api.db.utils import filter_model
-from limbook_api.v1.auth import auth_user_id
+from limbook_api.v1.auth.utils import auth_user_id
 from limbook_api.errors import ImageUploadError
 from limbook_api.v1.image_manager import Image
 
@@ -95,7 +95,7 @@ def generate_image(user_id=None, url=None):
     """Generates new image with random attributes for testing
     """
     image = Image(**{
-        'user_id': user_id if user_id else 'auth0|' + str(randint(1000, 9999)),
+        'user_id': user_id if user_id else randint(1000, 9999),
         'url': url if url else json.dumps({
             "thumb": "thumb-" + str(randint(1000, 9999)) + '.jpg',
             "medium": "medium-" + str(randint(1000, 9999)) + '.jpg',

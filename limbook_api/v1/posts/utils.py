@@ -4,7 +4,7 @@ from random import randint
 from flask import jsonify, request
 
 from limbook_api.db.utils import filter_model
-from limbook_api.v1.auth import auth_user_id
+from limbook_api.v1.auth.utils import auth_user_id
 from limbook_api.v1.image_manager import Image
 from limbook_api.v1.posts import Post
 from limbook_api.v1.reacts import React
@@ -81,7 +81,7 @@ def generate_post(content=None, user_id=None, images=None):
     """
     post = Post(**{
         'content': content if content else 'Post ' + str(randint(1000, 9999)),
-        'user_id': user_id if user_id else str(randint(1000, 9999)),
+        'user_id': user_id if user_id else randint(1000, 9999),
         'images': images if images else []
     })
 

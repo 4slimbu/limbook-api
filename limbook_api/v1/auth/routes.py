@@ -3,10 +3,11 @@ from datetime import datetime, timedelta
 
 from flask import Blueprint, request, jsonify, abort
 
-from limbook_api.v1.auth import requires_auth, AuthError
+from limbook_api.v1.auth import AuthError
 from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
-    validate_verify_email_data, refresh_auth_token
+    validate_verify_email_data, refresh_auth_token, requires_auth, \
+    blacklist_token
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)
@@ -232,6 +233,30 @@ def refresh_token():
         success (boolean) or 400 error
     """
     try:
+        return jsonify({
+            "success": True,
+            "refresh_token": refresh_auth_token()
+        })
+    except Exception as e:
+        abort(400)
+
+
+@auth.route("/logout", methods=['POST'])
+@requires_auth()
+def logout():
+    """ Refresh token
+
+    Post data:
+        access_token (string)
+        refresh_token (string)
+
+    Returns:
+        success (boolean) or 400 error
+    """
+    try:
+        data = request.get_json()
+        blacklist_token(data.get('access_token'))
+        blacklist_token(data.get('refresh_token'))
         return jsonify({
             "success": True,
             "refresh_token": refresh_auth_token()
