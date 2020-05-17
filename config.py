@@ -1,3 +1,6 @@
+import os
+
+
 class Config:
     # -------------------------------------------
     # App
@@ -7,10 +10,16 @@ class Config:
     DEBUG = True
 
     # App secret
-    SECRET_KEY = "my_secret_key"
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'my_secret_key')
 
     # Pagination
     PAGINATION = 10
+
+    # Access token validity in seconds
+    ACCESS_TOKEN_VALID_TIME = 10 * 60
+
+    # Refresh token validity in seconds
+    REFRESH_TOKEN_VALID_TIME = 60 * 60
 
     # -------------------------------------------
     # Database

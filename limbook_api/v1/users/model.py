@@ -9,9 +9,14 @@ class User(BaseDbModel):
     last_name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False, unique=True)
     email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    email_verif_code = db.Column(db.String, nullable=True)
+    email_verif_code_expires_on = db.Column(db.DateTime, nullable=True)
+    password_reset_code = db.Column(db.String, nullable=True)
+    password_reset_code_expires_on = db.Column(db.DateTime, nullable=True)
     phone_number = db.Column(db.String, nullable=True)
     profile_picture = db.Column(db.String, nullable=True)
     cover_picture = db.Column(db.String, nullable=True)
+
     password = db.Column(db.String, nullable=False)
     role_id = db.Column(
         db.Integer, db.ForeignKey('role.id'),

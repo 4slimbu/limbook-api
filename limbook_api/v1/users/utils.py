@@ -13,17 +13,30 @@ from limbook_api.v1.users import User
 fake = Faker()
 
 
-def generate_user(first_name=None, last_name=None, email=None, password=None):
+def generate_user(
+    first_name=None,
+    last_name=None,
+    email=None,
+    password=None,
+    email_verif_code=None,
+    email_verif_code_expires_on=None,
+    password_reset_code=None,
+    password_reset_code_expires_on=None
+):
     """Generates new user with random attributes for testing
     """
     password = password if password else secrets.token_hex(16)
-    user = User(**{
-        'first_name': first_name if first_name else fake.name().split()[0],
-        'last_name': last_name if last_name else fake.name().split()[-1],
-        'email': email if email else fake.email(),
-        'password': bcrypt.generate_password_hash(password).decode('utf-8'),
-        'role_id': generate_role().id
-    })
+    user = User(
+        first_name=first_name if first_name else fake.name().split()[0],
+        last_name=last_name if last_name else fake.name().split()[-1],
+        email=email if email else fake.email(),
+        password=bcrypt.generate_password_hash(password).decode('utf-8'),
+        role_id=generate_role().id,
+        email_verif_code=email_verif_code,
+        email_verif_code_expires_on=email_verif_code_expires_on,
+        password_reset_code=password_reset_code,
+        password_reset_code_expires_on=password_reset_code_expires_on
+    )
 
     user.insert()
     return user
