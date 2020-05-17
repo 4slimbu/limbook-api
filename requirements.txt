@@ -11,3 +11,4 @@ Pillow==7.1.2
 pytest==5.4.2
 Flask-Bcrypt==0.7.1
 PyJWT==1.7.1
+Flask-Caching==1.8.0
