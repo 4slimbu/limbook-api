@@ -3,7 +3,7 @@ from random import randint
 from sqlalchemy import or_
 
 from limbook_api.db.utils import filter_model
-from limbook_api.v1.auth import auth_user_id
+from limbook_api.v1.auth.utils import auth_user_id
 from limbook_api.v1.friends import Friend
 
 
@@ -15,8 +15,8 @@ def generate_friend(requester_id=None, receiver_id=None, is_friend=True):
     """Generates new friend with random attributes for testing
     """
     friend = Friend(**{
-        'requester_id': requester_id if requester_id else str(randint(1000, 9999)),
-        'receiver_id': receiver_id if receiver_id else str(randint(1000, 9999)),
+        'requester_id': requester_id if requester_id else randint(1000, 9999),
+        'receiver_id': receiver_id if receiver_id else randint(1000, 9999),
         'is_friend': is_friend
     })
 

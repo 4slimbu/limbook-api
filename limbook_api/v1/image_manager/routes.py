@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request, json
 
-from limbook_api.v1.auth import requires_auth, auth_user_id
+from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.image_manager import Image, create_img_set, \
     validate_image_data, filter_images
 from limbook_api.v1.posts import Post, get_images_list_using_ids

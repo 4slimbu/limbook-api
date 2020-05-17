@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 
 from flask import Blueprint, request, jsonify, abort
 
-from limbook_api.v1.auth import requires_auth, AuthError
+from limbook_api.v1.auth import AuthError
 from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
-    validate_verify_email_data, refresh_auth_token
+    validate_verify_email_data, refresh_auth_token, requires_auth
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)

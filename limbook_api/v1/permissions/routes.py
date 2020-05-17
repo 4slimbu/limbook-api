@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, request
 
-from limbook_api.v1.auth import requires_auth, auth_user_id
+from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.permissions import Permission, filter_permissions, \
     validate_permission_data, validate_permission_update_data
 

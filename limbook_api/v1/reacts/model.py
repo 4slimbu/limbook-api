@@ -4,7 +4,7 @@ from limbook_api.db import db, BaseDbModel
 class React(BaseDbModel):
     """Reacts"""
 
-    user_id = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     post_id = db.Column(
         db.Integer, db.ForeignKey('post.id'),
         nullable=False

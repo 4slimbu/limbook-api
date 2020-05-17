@@ -3,7 +3,7 @@ from random import randint
 from flask import jsonify, abort, request
 
 from limbook_api.db.utils import filter_model
-from limbook_api.v1.auth import auth_user_id
+from limbook_api.v1.auth.utils import auth_user_id
 from limbook_api.v1.comments import Comment
 
 
@@ -12,7 +12,7 @@ def generate_comment(content=None, user_id=None, post_id=None):
     """
     comment = Comment(**{
         'content': content if content else 'Comment' + str(randint(1000, 9999)),
-        'user_id': user_id if user_id else str(randint(1000, 9999)),
+        'user_id': user_id if user_id else randint(1000, 9999),
         'post_id': post_id if post_id else randint(1000, 9999),
     })
 

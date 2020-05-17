@@ -6,7 +6,7 @@ from limbook_api.db import db, BaseDbModel
 class Activity(BaseDbModel):
     """Activities"""
 
-    user_id = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     post_id = db.Column(db.Integer, nullable=False)
     action = db.Column(
         db.Enum(

@@ -7,7 +7,7 @@ class Post(BaseDbModel):
     """Posts"""
 
     content = db.Column(db.String, nullable=False)
-    user_id = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
 
     """
     format()

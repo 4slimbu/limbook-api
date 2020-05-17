@@ -4,8 +4,8 @@ from limbook_api.db import db, BaseDbModel
 class Friend(BaseDbModel):
     """Friends"""
 
-    requester_id = db.Column(db.String, nullable=False)
-    receiver_id = db.Column(db.String, nullable=False)
+    requester_id = db.Column(db.Integer, nullable=False)
+    receiver_id = db.Column(db.Integer, nullable=False)
     is_friend = db.Column(db.Boolean, nullable=False, default=False)
 
     """
