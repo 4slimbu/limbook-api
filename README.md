@@ -3,7 +3,7 @@ An api for social network.
 
 **Under development. Please check back later.**
 
-**First release is scheduled for: May 16 2020**
+**First release is scheduled for: May 20 2020**
 
 **Feel free to contribute**
 
