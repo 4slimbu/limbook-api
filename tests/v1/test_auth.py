@@ -4,6 +4,7 @@ from unittest import main
 
 from flask import json
 
+from limbook_api.v1.permissions import generate_permission
 from limbook_api.v1.users import generate_user, generate_role, User
 from tests.base import BaseTestCase, api_base
 
@@ -11,6 +12,23 @@ from tests.base import BaseTestCase, api_base
 class UserTestCase(BaseTestCase):
     """This class represents the test case for Users"""
     # Helper methods -------------------------
+    def get_access_token(self, permissions=None):
+        permissions = permissions if permissions else []
+        role = generate_role(permissions=permissions)
+        user = generate_user(role_id=role.id, password="password")
+
+        login_data = {
+            "email": user.email,
+            "password": "password",
+        }
+
+        res = self.client().post(
+            api_base + '/login',
+            json=login_data
+        )
+
+        return json.loads(res.data).get('access_token')
+
     def login_random_user(self):
         user = generate_user(password="password")
         login_data = {
@@ -78,6 +96,7 @@ class UserTestCase(BaseTestCase):
 
     def test_cannot_access_protected_route_without_correct_permission(self):
         # request
+
         res = self.client().get(
             api_base
             + '/secure-route?mock_token_verification=True&permission='
@@ -89,11 +108,19 @@ class UserTestCase(BaseTestCase):
         self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_can_access_protected_route_with_correct_permission(self):
+        """ Test if permission filter works
+
+        This is the only test where we are generating actual token.
+        For other cases we are mocking the token generation, as
+        the process is expensive and slows down the test
+        """
         # request
+        permission = generate_permission(slug='read:secure_route')
+        token = self.get_access_token(permissions=[permission])
+        headers = {'Authorization': 'Bearer ' + token}
         res = self.client().get(
-            api_base
-            + '/secure-route'
-            + '?mock_token_verification=True&permission=read:secure_route'
+            api_base + '/secure-route',
+            headers=headers
         )
 
         # assert
