@@ -21,6 +21,40 @@ class Config:
     # Refresh token validity in seconds
     REFRESH_TOKEN_VALID_TIME = 60 * 60
 
+    # Initial roles and permissions
+    # It may not reflect the current roles and permissions in the system
+    # as user with ability to manage roles and permissions can change as
+    # per the need of the system.
+    #
+    # manage:all -> can manage everything
+    # manage:item -> can manage everything related to item
+    # manage_self:item -> can manage own item
+    INITIAL_ROLES_AND_PERMISSIONS = {
+        "super_admin": ['manage:all'],
+        "admin": [
+            'manage:users', 'manage:roles', 'manage:permissions',
+            'manage:activities', 'manage:friends', 'manage:images',
+            'manage:posts', 'manage:comments', 'manage:reacts',
+            'manage:self', 'manage_self:posts', 'manage_self:comments',
+            'manage_self:reacts', 'manage_self:friends', 'manage_self:images',
+            'manage_self:activities'
+        ],
+        "moderator": [
+            'manage:posts', 'manage:comments', 'manage:reacts',
+            'manage:self', 'manage_self:posts', 'manage_self:comments',
+            'manage_self:reacts', 'manage_self:friends', 'manage_self:images',
+            'manage_self:activities'
+        ],
+        "user": [
+            'manage:self', 'manage_self:posts', 'manage_self:comments',
+            'manage_self:reacts', 'manage_self:friends', 'manage_self:images',
+            'manage_self:activities'
+        ],
+        "unverified_user": [
+            'manage:self'
+        ]
+    }
+
     # -------------------------------------------
     # Flask-Caching
     # -------------------------------------------
@@ -62,11 +96,3 @@ class Config:
     # Email
     # -------------------------------------------
     EMAIL_DRIVER = 'flask-mail'
-
-    # -------------------------------------------
-    # Authentication
-    # -------------------------------------------
-    AUTH_DRIVER = 'auth0'
-    AUTH0_DOMAIN = 'limvus.auth0.com'
-    ALGORITHMS = ['RS256']
-    API_AUDIENCE = 'limbook-auth-api'
