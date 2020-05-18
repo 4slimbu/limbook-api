@@ -14,6 +14,7 @@ from tests.base import mock_token_verification
 
 
 def validate_register_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -69,6 +70,7 @@ def validate_register_data(data):
 
 
 def validate_login_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -93,6 +95,7 @@ def validate_login_data(data):
 
 
 def validate_verify_email_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -111,6 +114,7 @@ def validate_verify_email_data(data):
 
 
 def validate_reset_password_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -231,23 +235,18 @@ def refresh_auth_token():
     Returns:
         token (string)
     """
-    try:
-        token = get_token_from_auth_header()
+    token = get_token_from_auth_header()
 
-        # TODO: blacklist token
+    payload = decode_token(token)
 
-        payload = decode_token(token)
+    user = User.query.get(payload.get('sub'))
 
-        user = User.query.get(payload.get('sub'))
-
-        if user is None:
-            abort(400)
-
-        valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
-        return encode_auth_token(user, valid_seconds=valid_seconds)
-
-    except Exception as e:
+    if user is None:
         abort(400)
+
+    blacklist_token(token)
+    valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
+    return encode_auth_token(user, valid_seconds=valid_seconds)
 
 
 def decode_token(token):
@@ -260,6 +259,12 @@ def decode_token(token):
     Returns:
         payload (dict)
     """
+    if is_token_blacklisted(token):
+        raise AuthError({
+            'code': 'token_blacklisted',
+            'description': 'Token access has been revoked'
+        }, 401)
+
     try:
         payload = jwt.decode(token, current_app.config.get('SECRET_KEY'))
         return payload
@@ -329,12 +334,6 @@ def requires_auth(permission=''):
                 )
             else:
                 token = get_token_from_auth_header()
-
-                if is_token_blacklisted(token):
-                    raise AuthError({
-                        'code': 'token_blacklisted',
-                        'description': 'Token access has been revoked'
-                    }, 401)
 
                 payload = decode_token(token)
 

@@ -26,6 +26,7 @@ def generate_permission(slug=None, name=None, description=None):
 
 
 def validate_permission_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -56,6 +57,7 @@ def validate_permission_data(data):
 
 
 def validate_permission_update_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 

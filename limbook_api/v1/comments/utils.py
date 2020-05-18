@@ -21,6 +21,7 @@ def generate_comment(content=None, user_id=None, post_id=None):
 
 
 def validate_comment_data(data):
+    data = data if data else {}
     # check if comment attributes are present
     if not data.get('content'):
         abort(422)

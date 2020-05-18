@@ -46,6 +46,7 @@ def generate_user(
 
 
 def validate_user_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -107,6 +108,7 @@ def validate_user_data(data):
 
 
 def validate_user_update_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 

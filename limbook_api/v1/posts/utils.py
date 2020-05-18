@@ -11,6 +11,7 @@ from limbook_api.v1.reacts import React
 
 
 def validate_post_data(data):
+    data = data if data else {}
     # check if post attributes are present
     if not data.get('content'):
         abort(422)
@@ -45,6 +46,7 @@ def filter_posts(count_only=False):
 
 
 def validate_react_data(data):
+    data = data if data else {}
     # check if react attributes are present
     if not data.get('content'):
         abort(422)
