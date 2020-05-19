@@ -395,3 +395,45 @@ def send_reset_password_mail(user, reset_password_code):
     If you did not make this request then simply ignore this email.
     '''
     mail.send(msg)
+
+
+def validate_profile_data(data):
+    data = data if data else {}
+    validated_data = {}
+    errors = {}
+
+    # check first_name
+    if data.get('first_name'):
+        validated_data['first_name'] = data.get('first_name')
+
+    # check last_name
+    if data.get('last_name'):
+        validated_data['last_name'] = data.get('last_name')
+
+    # check email
+    if data.get('email'):
+        errors['email'] = 'Email address cannot be changed.'
+
+    # check password
+    if data.get('password'):
+        validated_data['password'] = data.get('password')
+
+        # check if password and confirm password match
+        if data.get('confirm_password') != data.get('password'):
+            errors['confirm_password'] = 'Password and Confirm password ' \
+                                         'must match'
+
+    # check profile picture
+    if data.get('profile_picture'):
+        validated_data['profile_picture'] = data.get('profile_picture')
+
+    # check cover picture
+    if data.get('cover_picture'):
+        validated_data['cover_picture'] = data.get('cover_picture')
+
+    # return errors
+    if len(errors) > 0:
+        raise ValidationError(errors)
+
+    # return validated data
+    return validated_data

@@ -8,7 +8,7 @@ from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
     validate_verify_email_data, refresh_auth_token, requires_auth, \
     blacklist_token, send_verification_mail, send_reset_password_mail, \
-    get_token_from_auth_header
+    get_token_from_auth_header, auth_user_id, validate_profile_data
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)
@@ -46,6 +46,55 @@ def logout():
     return jsonify({
         "success": True
     })
+
+
+@auth.route("/profile", methods=['GET'])
+@requires_auth()
+def get_profile():
+    """ Get auth user info
+
+    Returns:
+        success (boolean)
+        user (dict)
+    """
+    user = User.query.filter(User.id == auth_user_id()).first_or_404()
+    return jsonify({
+        "success": True,
+        "user": user.format()
+    })
+
+
+@auth.route("/profile", methods=['PATCH'])
+@requires_auth()
+def update_profile():
+    """ Update profile
+
+    Patch data:
+        first_name (string)
+        last_name (string)
+        phone_number (string)
+        password (string)
+        confirm_password (string)
+        profile_picture (string)
+        cover_picture (string)
+
+    Returns:
+        success (boolean)
+        user (dict)
+    """
+    data = validate_profile_data(request.get_json())
+
+    # get user
+    user = User.query.first_or_404(auth_user_id())
+
+    try:
+        user.query.update(data)
+        return jsonify({
+            "success": True,
+            "user": user.format()
+        })
+    except Exception as e:
+        abort(400)
 
 
 # ====================================

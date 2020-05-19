@@ -128,10 +128,6 @@ def validate_user_update_data(data):
     if data.get('password'):
         validated_data['password'] = data.get('password')
 
-    # check confirm password
-    if data.get('confirm_password'):
-        validated_data['confirm_password'] = data.get('confirm_password')
-
         # check if password and confirm password match
         if data.get('confirm_password') != data.get('password'):
             errors['confirm_password'] = 'Password and Confirm password ' \
