@@ -7,7 +7,8 @@ from limbook_api.v1.auth import AuthError
 from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
     validate_verify_email_data, refresh_auth_token, requires_auth, \
-    blacklist_token, send_verification_mail, send_reset_password_mail
+    blacklist_token, send_verification_mail, send_reset_password_mail, \
+    get_token_from_auth_header
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)
@@ -32,7 +33,6 @@ def logout():
     blacklist so that those tokens cannot be used again.
 
     Post data:
-        access_token (string | required)
         refresh_token (string | required)
 
     Returns:
@@ -40,7 +40,7 @@ def logout():
     """
     data = request.get_json()
 
-    blacklist_token(data.get('access_token'))
+    blacklist_token(get_token_from_auth_header())
     blacklist_token(data.get('refresh_token'))
 
     return jsonify({

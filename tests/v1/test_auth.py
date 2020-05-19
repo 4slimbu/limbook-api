@@ -282,23 +282,20 @@ class UserTestCase(BaseTestCase):
         access_token = data.get('access_token')
         refresh_token = data.get('refresh_token')
 
-        headers = {'Authorization': 'Bearer ' + access_token}
-
         # make request
         res = self.client().post(
             api_base
             + '/logout',
             json={
-                "access_token": access_token,
                 "refresh_token": refresh_token
             },
-            headers=headers
+            headers=self.header_with_token(access_token)
         )
 
         # assert
         self.assertEqual(res.status_code, 200)
 
-        # make request after logout using the previous tokens
+        # make request after logout using the previous access token
         res = self.client().post(
             api_base
             + '/logout',
@@ -308,7 +305,7 @@ class UserTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'token_blacklisted')
 
-        # make request after logout using the previous tokens
+        # make request after logout using the previous refresh token
         res = self.client().post(
             api_base
             + '/logout',
