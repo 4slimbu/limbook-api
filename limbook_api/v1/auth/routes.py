@@ -7,17 +7,45 @@ from limbook_api.v1.auth import AuthError
 from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
     validate_verify_email_data, refresh_auth_token, requires_auth, \
-    blacklist_token
+    blacklist_token, send_verification_mail, send_reset_password_mail, \
+    get_token_from_auth_header
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)
 
 
-# Test secure route
+# ====================================
+# SECURE ROUTES
+# ====================================
 @auth.route("/secure-route")
 @requires_auth('read:secure_route')
 def secure():
+    """Secure route for testing purpose"""
     return 'Secure location accessed'
+
+
+@auth.route("/logout", methods=['POST'])
+@requires_auth()
+def logout():
+    """ Logout
+
+    Puts the access and refresh token of the auth user in
+    blacklist so that those tokens cannot be used again.
+
+    Post data:
+        refresh_token (string | required)
+
+    Returns:
+        success (boolean)
+    """
+    data = request.get_json()
+
+    blacklist_token(get_token_from_auth_header())
+    blacklist_token(data.get('refresh_token'))
+
+    return jsonify({
+        "success": True
+    })
 
 
 # ====================================
@@ -28,12 +56,12 @@ def register():
     """ Create new users
 
         Post data:
-            first_name (string)
-            last_name (string)
-            email (string)
-            phone_number (string)
-            password (string)
-            confirm_password (string)
+            first_name (string | required)
+            last_name (string | required)
+            email (string | required)
+            phone_number (string | optional)
+            password (string | required)
+            confirm_password (string | required)
 
         Returns:
             success (boolean)
@@ -62,8 +90,8 @@ def login():
     """ Login
 
         Post data:
-            email (string)
-            password (string)
+            email (string | required)
+            password (string |required)
 
         Returns:
             success (boolean)
@@ -71,28 +99,24 @@ def login():
             access_token (string)
             refresh_token (string)
     """
-    # vars
     data = validate_login_data(request.get_json())
 
-    token = generate_token(data.get('email'), data.get('password'))
-    if token:
+    try:
+        token = generate_token(data.get('email'), data.get('password'))
         refresh_token = generate_token(
             data.get('email'), data.get('password'), is_refresh_token=True
         )
-    else:
+    except Exception as e:
         raise AuthError({
             'code': 'login_failed',
             'description': 'Unable to login with given credentials'
-        }, 400)
+        }, 401)
 
-    try:
-        return jsonify({
-            "success": True,
-            "access_token": token,
-            "refresh_token": refresh_token
-        })
-    except Exception as e:
-        abort(400)
+    return jsonify({
+        "success": True,
+        "access_token": token,
+        "refresh_token": refresh_token
+    })
 
 
 @auth.route("/send-verification-email", methods=['POST'])
@@ -100,27 +124,25 @@ def send_verification_email():
     """ Send verification email
 
     Post data:
-        email (string)
+        email (string | required)
 
     Returns:
         success (boolean) or 400 error
     """
+    data = request.get_json()
+    user = User.query.filter(User.email == data.get('email')).first_or_404()
+
     try:
-        data = request.get_json()
-        user = User.query.filter(User.email == data.get('email')).first_or_404()
+        # generate verification code
+        verification_code = secrets.token_hex(8)
 
-        if user:
-            # generate verification code
-            verification_code = secrets.token_hex(8)
+        # save it to database
+        user.email_verif_code = verification_code
+        user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
+        user.update()
 
-            # save it to database
-            user.email_verif_code = verification_code
-            user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
-            user.update()
-
-            # send email
-            if 'send_email':
-                pass
+        # send email
+        send_verification_mail(user, verification_code)
 
         return jsonify({
             "success": True
@@ -131,26 +153,25 @@ def send_verification_email():
 
 @auth.route("/verify-email", methods=['POST'])
 def verify_email():
-    """ Send verification email
+    """ Verify email
 
     Post data:
-        verification_code (string)
+        verification_code (string | required)
 
     Returns:
         success (boolean) or 400 error
     """
-    try:
-        data = validate_verify_email_data(request.get_json())
-        user = User.query.filter(
-            User.email_verif_code == data.get('verification_code'),
-            User.email_verif_code_expires_on > datetime.utcnow()
-        ).first_or_404()
+    data = validate_verify_email_data(request.get_json())
+    user = User.query.filter(
+        User.email_verif_code == data.get('verification_code'),
+        User.email_verif_code_expires_on > datetime.utcnow()
+    ).first_or_404()
 
-        if user:
-            user.email_verified = True
-            user.email_verif_code = None
-            user.email_verif_code_expires_on = None
-            user.update()
+    try:
+        user.email_verified = True
+        user.email_verif_code = None
+        user.email_verif_code_expires_on = None
+        user.update()
 
         return jsonify({
             "success": True
@@ -169,22 +190,20 @@ def send_reset_password_email():
     Returns:
         success (boolean) or 400 error
     """
+    data = request.get_json()
+    user = User.query.filter(User.email == data.get('email')).first_or_404()
+
     try:
-        data = request.get_json()
-        user = User.query.filter(User.email == data.get('email')).first_or_404()
+        # generate verification code
+        reset_password_code = secrets.token_hex(8)
 
-        if user:
-            # generate verification code
-            reset_password_code = secrets.token_hex(8)
+        # save it to database
+        user.password_reset_code = reset_password_code
+        user.password_reset_code_expires_on = datetime.utcnow() + timedelta(hours=1)
+        user.update()
 
-            # save it to database
-            user.password_reset_code = reset_password_code
-            user.password_reset_code_expires_on = datetime.utcnow() + timedelta(hours=1)
-            user.update()
-
-            # send email
-            if 'send_email':
-                pass
+        # send email
+        send_reset_password_mail(user, reset_password_code)
 
         return jsonify({
             "success": True
@@ -199,21 +218,23 @@ def reset_password():
 
     Post data:
         password_reset_code (string)
+        email (string)
+        password (string)
+        confirm_password (string)
 
     Returns:
         success (boolean) or 400 error
     """
-    try:
-        data = validate_reset_password_data(request.get_json())
-        user = User.query.filter(
-            User.email == data.get('email'),
-            User.password_reset_code == data.get('password_reset_code'),
-            User.password_reset_code_expires_on > datetime.utcnow()
-        ).first_or_404()
+    data = validate_reset_password_data(request.get_json())
+    user = User.query.filter(
+        User.email == data.get('email'),
+        User.password_reset_code == data.get('password_reset_code'),
+        User.password_reset_code_expires_on > datetime.utcnow()
+    ).first_or_404()
 
-        if user:
-            user.password = data.get('password')
-            user.update()
+    try:
+        user.password = data.get('password')
+        user.update()
 
         return jsonify({
             "success": True
@@ -226,40 +247,11 @@ def reset_password():
 def refresh_token():
     """ Refresh token
 
-    Post data:
-        password_reset_code (string)
-
     Returns:
-        success (boolean) or 400 error
-    """
-    try:
-        return jsonify({
-            "success": True,
-            "refresh_token": refresh_auth_token()
-        })
-    except Exception as e:
-        abort(400)
-
-
-@auth.route("/logout", methods=['POST'])
-@requires_auth()
-def logout():
-    """ Refresh token
-
-    Post data:
-        access_token (string)
+        success (boolean)
         refresh_token (string)
-
-    Returns:
-        success (boolean) or 400 error
     """
-    try:
-        data = request.get_json()
-        blacklist_token(data.get('access_token'))
-        blacklist_token(data.get('refresh_token'))
-        return jsonify({
-            "success": True,
-            "refresh_token": refresh_auth_token()
-        })
-    except Exception as e:
-        abort(400)
+    return jsonify({
+        "success": True,
+        "refresh_token": refresh_auth_token()
+    })

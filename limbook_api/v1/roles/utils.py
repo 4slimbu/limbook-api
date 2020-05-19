@@ -29,6 +29,7 @@ def generate_role(slug=None, name=None, description=None, permissions=None):
 
 
 def validate_role_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -59,6 +60,7 @@ def validate_role_data(data):
 
 
 def validate_role_update_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 

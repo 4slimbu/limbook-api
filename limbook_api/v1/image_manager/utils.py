@@ -108,6 +108,7 @@ def generate_image(user_id=None, url=None):
 
 
 def validate_image_data(data):
+    data = data if data else {}
     # check if image attributes are present
     if not data.get('image'):
         abort(422)

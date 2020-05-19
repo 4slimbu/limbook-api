@@ -38,8 +38,7 @@ def get_post_reacts(post_id):
 
 
 @reacts.route("/posts/<int:post_id>/reacts/toggle", methods=['POST'])
-# TODO: fix caps on Create:reacts and use it
-@requires_auth(['create:reacts', 'update:reacts', 'manage_reacts'])
+@requires_auth(['create:reacts', 'update:reacts'])
 def toggle_post_reacts(post_id):
     """ Create new react or delete if exist
 

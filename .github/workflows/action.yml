@@ -16,6 +16,11 @@
       strategy:
         matrix:
           python-version: [3.7, 3.x]
+      env:
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
 
       name: Python ${{ matrix.python-version }}
       steps:
@@ -34,32 +39,3 @@
         - name: Run tests
           run: |
             pytest
-
-#        - name: Set heroku credentials
-#          env:
-#            HEROKU_LOGIN: ${{ secrets.HEROKU_LOGIN }}
-#            HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-#          run: |
-#            cat > ~/.netrc << EOF
-#            machine api.heroku.com
-#              login $HEROKU_LOGIN
-#              password $HEROKU_API_KEY
-#            machine git.heroku.com
-#              login $HEROKU_LOGIN
-#              password $HEROKU_API_KEY
-#            EOF
-#
-#        - name: Deploy to staging
-#          if: github.ref == 'refs/heads/develop'
-#          run: |
-#            heroku git:remote -a staging-limbook-api
-#            git filter-branch -- --all
-#            git push heroku HEAD:master
-#
-#        - name: Deploy to production
-#          if: github.ref == 'refs/heads/master'
-#          run: |
-#            heroku git:remote -a limbook-api
-#            git filter-branch -- --all
-#            git push heroku HEAD:master
-

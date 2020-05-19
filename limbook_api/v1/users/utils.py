@@ -17,6 +17,7 @@ def generate_user(
     first_name=None,
     last_name=None,
     email=None,
+    email_verified=None,
     password=None,
     role_id=None,
     email_verif_code=None,
@@ -31,6 +32,7 @@ def generate_user(
         first_name=first_name if first_name else fake.name().split()[0],
         last_name=last_name if last_name else fake.name().split()[-1],
         email=email if email else fake.email(),
+        email_verified=email_verified if email_verified else False,
         password=bcrypt.generate_password_hash(password).decode('utf-8'),
         role_id=role_id if role_id else generate_role().id,
         email_verif_code=email_verif_code,
@@ -44,6 +46,7 @@ def generate_user(
 
 
 def validate_user_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -105,6 +108,7 @@ def validate_user_data(data):
 
 
 def validate_user_update_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 

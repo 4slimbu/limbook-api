@@ -1,19 +1,19 @@
-import json
 import secrets
 from datetime import datetime, timedelta
 from functools import wraps
-from urllib.request import urlopen
 
 import jwt
 from flask import current_app, abort, request
+from flask_mail import Message
 from jose import jwt
 
-from limbook_api import bcrypt, AuthError, cache
+from limbook_api import bcrypt, AuthError, cache, mail
 from limbook_api.v1.users import User, ValidationError
 from tests.base import mock_token_verification
 
 
 def validate_register_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -69,6 +69,7 @@ def validate_register_data(data):
 
 
 def validate_login_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -93,6 +94,7 @@ def validate_login_data(data):
 
 
 def validate_verify_email_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -111,6 +113,7 @@ def validate_verify_email_data(data):
 
 
 def validate_reset_password_data(data):
+    data = data if data else {}
     validated_data = {}
     errors = {}
 
@@ -231,23 +234,18 @@ def refresh_auth_token():
     Returns:
         token (string)
     """
-    try:
-        token = get_token_from_auth_header()
+    token = get_token_from_auth_header()
 
-        # TODO: blacklist token
+    payload = decode_token(token)
 
-        payload = decode_token(token)
+    user = User.query.get(payload.get('sub'))
 
-        user = User.query.get(payload.get('sub'))
-
-        if user is None:
-            abort(400)
-
-        valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
-        return encode_auth_token(user, valid_seconds=valid_seconds)
-
-    except Exception as e:
+    if user is None:
         abort(400)
+
+    blacklist_token(token)
+    valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
+    return encode_auth_token(user, valid_seconds=valid_seconds)
 
 
 def decode_token(token):
@@ -260,6 +258,12 @@ def decode_token(token):
     Returns:
         payload (dict)
     """
+    if is_token_blacklisted(token):
+        raise AuthError({
+            'code': 'token_blacklisted',
+            'description': 'Token access has been revoked'
+        }, 401)
+
     try:
         payload = jwt.decode(token, current_app.config.get('SECRET_KEY'))
         return payload
@@ -330,12 +334,6 @@ def requires_auth(permission=''):
             else:
                 token = get_token_from_auth_header()
 
-                if is_token_blacklisted(token):
-                    raise AuthError({
-                        'code': 'token_blacklisted',
-                        'description': 'Token access has been revoked'
-                    }, 401)
-
                 payload = decode_token(token)
 
             current_app.config['payload'] = payload
@@ -362,8 +360,38 @@ def auth_user_id():
 
 
 def blacklist_token(token):
+    # for k in cache.cache._cache:
+    #     print(k, cache.get(k))
     cache.set(token, "blacklisted", timeout=60*60)
 
 
 def is_token_blacklisted(token):
     return cache.get(token) == 'blacklisted'
+
+
+def send_verification_mail(user, verification_code):
+    msg = Message(
+        'Verify Email Request',
+        sender='noreply@demo.com',
+        recipients=[user.email]
+    )
+    msg.body = f'''Please use this token to verify: 
+    { verification_code }
+
+    If you did not make this request then simply ignore this email.
+    '''
+    mail.send(msg)
+
+
+def send_reset_password_mail(user, reset_password_code):
+    msg = Message(
+        'Password Reset Request',
+        sender='noreply@demo.com',
+        recipients=[user.email]
+    )
+    msg.body = f'''Please use this token to reset your password: 
+    { reset_password_code }
+
+    If you did not make this request then simply ignore this email.
+    '''
+    mail.send(msg)
