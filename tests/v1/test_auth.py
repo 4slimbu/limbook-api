@@ -12,6 +12,11 @@ from tests.base import BaseTestCase, api_base
 class UserTestCase(BaseTestCase):
     """This class represents the test case for Users"""
     # Helper methods -------------------------
+
+    @staticmethod
+    def header_with_token(token):
+        return {'Authorization': 'Bearer ' + token}
+
     def get_access_token(self, permissions=None):
         permissions = permissions if permissions else []
         role = generate_role(permissions=permissions)
@@ -80,7 +85,7 @@ class UserTestCase(BaseTestCase):
 
     def test_cannot_access_protected_route_with_expired_token(self):
         # given
-        headers = {'Authorization': self.app.config.get('EXAMPLE_TOKEN')}
+        headers = {'Authorization': self.app.config.get('EXPIRED_TOKEN')}
 
         # make request
         res = self.client().get(
@@ -96,7 +101,6 @@ class UserTestCase(BaseTestCase):
 
     def test_cannot_access_protected_route_without_correct_permission(self):
         # request
-
         res = self.client().get(
             api_base
             + '/secure-route?mock_token_verification=True&permission='
@@ -156,9 +160,10 @@ class UserTestCase(BaseTestCase):
         self.assertTrue(data.get('user'))
 
     def test_user_can_send_verification_email(self):
-        # request
+        # given
         user = generate_user()
 
+        # request
         res = self.client().post(
             api_base + '/send-verification-email',
             json={"email": user.email}
@@ -176,6 +181,7 @@ class UserTestCase(BaseTestCase):
             email_verif_code_expires_on=datetime.now() + timedelta(hours=1)
         )
 
+        # request
         res = self.client().post(
             api_base + '/verify-email',
             json={"verification_code": user.email_verif_code}
@@ -187,9 +193,10 @@ class UserTestCase(BaseTestCase):
         self.assertTrue(data.get('success'))
 
     def test_user_can_send_reset_password_email(self):
-        # request
+        # given
         user = generate_user()
 
+        # request
         res = self.client().post(
             api_base + '/send-reset-password-email',
             json={"email": user.email}
@@ -268,7 +275,6 @@ class UserTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertNotEqual(data.get('refresh_token'), refresh_token)
 
-
     def test_user_can_logout(self):
         # login random user and get tokens
         res = self.login_random_user()
@@ -290,34 +296,28 @@ class UserTestCase(BaseTestCase):
         )
 
         # assert
-        data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
 
         # make request after logout using the previous tokens
-        headers = {'Authorization': 'Bearer ' + access_token}
-
-        # make request
         res = self.client().post(
             api_base
             + '/logout',
-            headers=headers
+            headers=self.header_with_token(access_token)
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'token_blacklisted')
 
         # make request after logout using the previous tokens
-        headers = {'Authorization': 'Bearer ' + refresh_token}
-
-        # make request
         res = self.client().post(
             api_base
             + '/logout',
-            headers=headers
+            headers=self.header_with_token(refresh_token)
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'token_blacklisted')
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

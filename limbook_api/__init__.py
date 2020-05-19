@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_bcrypt import Bcrypt
 from flask_caching import Cache
+from flask_mail import Mail
 
 from config import Config
 from limbook_api.db import setup_db
@@ -10,6 +11,8 @@ from limbook_api.v1 import register_v1_blueprints
 
 bcrypt = Bcrypt()
 cache = Cache()
+mail = Mail()
+
 
 def create_app(config_class=Config):
     """ Creates the flask app"""
@@ -26,6 +29,9 @@ def create_app(config_class=Config):
 
     # setup bcrypt
     bcrypt.init_app(app)
+
+    # setup flask mail
+    mail.init_app(app)
 
     # register blueprints
     register_v1_blueprints(app)

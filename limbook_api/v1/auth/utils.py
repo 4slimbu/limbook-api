@@ -1,14 +1,13 @@
-import json
 import secrets
 from datetime import datetime, timedelta
 from functools import wraps
-from urllib.request import urlopen
 
 import jwt
 from flask import current_app, abort, request
+from flask_mail import Message
 from jose import jwt
 
-from limbook_api import bcrypt, AuthError, cache
+from limbook_api import bcrypt, AuthError, cache, mail
 from limbook_api.v1.users import User, ValidationError
 from tests.base import mock_token_verification
 
@@ -361,8 +360,38 @@ def auth_user_id():
 
 
 def blacklist_token(token):
+    # for k in cache.cache._cache:
+    #     print(k, cache.get(k))
     cache.set(token, "blacklisted", timeout=60*60)
 
 
 def is_token_blacklisted(token):
     return cache.get(token) == 'blacklisted'
+
+
+def send_verification_mail(user, verification_code):
+    msg = Message(
+        'Verify Email Request',
+        sender='noreply@demo.com',
+        recipients=[user.email]
+    )
+    msg.body = f'''Please use this token to verify: 
+    { verification_code }
+
+    If you did not make this request then simply ignore this email.
+    '''
+    mail.send(msg)
+
+
+def send_reset_password_mail(user, reset_password_code):
+    msg = Message(
+        'Password Reset Request',
+        sender='noreply@demo.com',
+        recipients=[user.email]
+    )
+    msg.body = f'''Please use this token to reset your password: 
+    { reset_password_code }
+
+    If you did not make this request then simply ignore this email.
+    '''
+    mail.send(msg)

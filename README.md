@@ -22,11 +22,11 @@ $ pip install -r requirements.txt
 ```
 Export secrets
 ```shell script
-# in .bash_profile add these lines
+# in ~/.profile add these lines
 export SECRET_KEY='my_secret_key' #any random string
 export SQLALCHEMY_DATABASE_URI='sqlite:///site.db' #db path
-# source .bash_profile
-$ source ~/.bash_profile
+# logout and login
+$ source ~/.profile
 ```
 Run app
 ```shell script
