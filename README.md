@@ -11,7 +11,35 @@ features will be added in the next release, so keep checking for updates.
 **[API DOCUMENTATION](https://documenter.getpostman.com/view/3230491/SzmmVueg)**
 
 ## Features
+- Authentication
+- User
+- Role
+- Permission
+- Friend
+- Post
+- Comment
+- React
+- Image Manager
 
+** Upcoming Features **
+- Chat
+- Notification
+- Activity
+- User Bot
+
+## System Requirements
+- Python >= 3.7
+- Pip >= 19.0
+
+Note: may run in lower version but haven't tested.
+
+## Technology Used
+- Python
+- Flask
+- Flask-SQlalchemy
+- Redis
+- Redis Queue
+- Postgresql
 
 ## Installation
 Using virtual environment
@@ -28,19 +56,16 @@ $ pip install -r requirements.txt
 ```
 Export secrets
 ```shell script
-# in ~/.profile add your env variables. e.g:
+# in ~/.profile add your env variables:
 export SECRET_KEY='my_secret_key' #any random string
-export SQLALCHEMY_DATABASE_URI='sqlite:///site.db' #db path
+export DATABASE_URL= #db path
+export REDIS_URL= # redis url
+export MAIL_SERVER= # mail server host
+export MAIL_PORT= # mail server port
+export MAIL_USERNAME= # mail username
+export MAIL_PASSWORD= # mail password
 # logout and login or
 $ source ~/.profile
-```
-Run app
-```shell script
-# using python
-python run.py
-# using flask
-export FLASK_APP=limbook_api
-flask run
 ```
 Run migration
 ```shell script
@@ -56,6 +81,14 @@ flask seed run
 # admin@gmail.com/password
 # verified_user@gmail.com/password
 # unverified_user@gmail.com/password
+```
+Run app
+```shell script
+# using python
+python run.py
+# using flask
+export FLASK_APP=limbook_api
+flask run
 ```
 
 ## Test

@@ -7,9 +7,31 @@ from flask import current_app, abort, request
 from flask_mail import Message
 from jose import jwt
 
-from limbook_api import bcrypt, AuthError, cache, mail
+from limbook_api import bcrypt, AuthError, cache, mail, q
 from limbook_api.v1.users import User, ValidationError
-from tests.base import mock_token_verification
+
+
+def mock_token_verification(permission=None):
+    """ Mock payload with custom permission
+
+        Parameters:
+            permission (string): e.g: "read:posts,create:posts"
+
+        returns:
+            payload (dict)
+    """
+    if permission is None:
+        permission = []
+    else:
+        permission = permission.split(',')
+
+    return {
+        'iat': 1589041232,
+        'exp': 1589048432,
+        'sub': 1,
+        'is_verified': True,
+        'permissions': permission
+    }
 
 
 def validate_register_data(data):
@@ -396,7 +418,16 @@ def send_verification_mail(user):
 
     If you did not make this request then simply ignore this email.
     '''
-    mail.send(msg)
+    if current_app.config.get('USE_REDIS'):
+        q.enqueue(send_mail, msg)
+    else:
+        mail.send(msg)
+
+
+def send_mail(msg):
+    from run import app
+    with app.app_context():
+        mail.send(msg)
 
 
 def send_reset_password_mail(user, reset_password_code):
@@ -410,7 +441,10 @@ def send_reset_password_mail(user, reset_password_code):
 
     If you did not make this request then simply ignore this email.
     '''
-    mail.send(msg)
+    if current_app.config.get('USE_REDIS'):
+        q.enqueue(send_mail, msg)
+    else:
+        mail.send(msg)
 
 
 def validate_profile_data(data):
