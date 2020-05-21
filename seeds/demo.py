@@ -86,7 +86,7 @@ class DemoSeeder(Seeder):
 
         unverified_user = Role.query.filter(Role.slug == 'unverified_user').first()
         generate_user(
-            first_name="Verified",
+            first_name="Unverified",
             last_name="User",
             email="unverified_user@gmail.com",
             email_verified=False,
