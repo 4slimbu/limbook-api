@@ -29,14 +29,13 @@ def generate_img_in_bytes(width=500, height=500):
     return byte_img.getvalue()
 
 
-def generate_unique_img_dir():
+def generate_relative_image_dir():
     image_dir_name = secrets.token_hex(16)
     image_dir_path = os.path.join(
-        current_app.root_path,
         current_app.config.get('IMG_UPLOAD_DIR'),
         image_dir_name
     )
-    os.makedirs(image_dir_path, exist_ok=True)
+    os.makedirs(current_app.root_path + image_dir_path, exist_ok=True)
 
     return image_dir_path
 
@@ -52,7 +51,7 @@ def create_img_set(image_file):
     image_set = {}
     image_fullname = secure_filename(image_file.filename)
 
-    image_dir_path = generate_unique_img_dir()
+    relative_image_dir_path = generate_relative_image_dir()
     image_name, image_ext = os.path.splitext(image_fullname)
 
     if image_ext not in current_app.config.get('ALLOWED_EXTENSIONS'):
@@ -69,11 +68,11 @@ def create_img_set(image_file):
             i.thumbnail(size, PImage.LANCZOS)
             i_path = ''.join(
                 [
-                    image_dir_path, '/', image_name, '-', thumb, '-',
+                    relative_image_dir_path, '/', image_name, '-', thumb, '-',
                     str(size[0]), 'x', str(size[1]), image_ext
                 ]
             )
-            i.save(i_path, optimize=True, quality=95)
+            i.save(current_app.root_path + i_path, optimize=True, quality=95)
             image_set[thumb] = i_path
 
         return image_set
@@ -87,8 +86,9 @@ def create_img_set(image_file):
 def delete_image_set(image):
     url_set = image.format().get('url')
     for value in url_set.values():
-        if os.path.isfile(value):
-            os.remove(value)
+        image_path = current_app.root_path + value
+        if os.path.isfile(image_path):
+            os.remove(image_path)
 
 
 def generate_image(user_id=None, url=None):

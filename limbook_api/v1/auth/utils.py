@@ -193,6 +193,7 @@ def encode_auth_token(user, valid_seconds):
             'exp': datetime.utcnow() + timedelta(seconds=valid_seconds),
             'iat': datetime.utcnow(),
             'sub': str(user.id),
+            'is_verified': user.email_verified,
             'permissions': user.format().get('permissions'),
             # while testing, tokens are generated in quick succession and
             # for same payload, it is not possible to differentiate them
@@ -338,6 +339,12 @@ def requires_auth(permission=''):
 
             current_app.config['payload'] = payload
 
+            if not payload.get('is_verified'):
+                raise AuthError({
+                    'code': 'user_not_verified',
+                    'description': 'Please verify your email.'
+                }, 401)
+
             if not check_permissions(permission, payload):
                 raise AuthError({
                     'code': 'no_permission',
@@ -356,7 +363,7 @@ def auth_user_id():
     if payload is None:
         abort(401)
 
-    return payload.get('sub')
+    return int(payload.get('sub'))
 
 
 def blacklist_token(token):
@@ -369,7 +376,16 @@ def is_token_blacklisted(token):
     return cache.get(token) == 'blacklisted'
 
 
-def send_verification_mail(user, verification_code):
+def send_verification_mail(user):
+    # generate verification code
+    verification_code = secrets.token_hex(8)
+
+    # save it to database
+    user.email_verif_code = verification_code
+    user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
+    user.update()
+
+    # send mail
     msg = Message(
         'Verify Email Request',
         sender='noreply@demo.com',
@@ -395,3 +411,50 @@ def send_reset_password_mail(user, reset_password_code):
     If you did not make this request then simply ignore this email.
     '''
     mail.send(msg)
+
+
+def validate_profile_data(data):
+    data = data if data else {}
+    validated_data = {}
+    errors = {}
+
+    # check first_name
+    if data.get('first_name'):
+        validated_data['first_name'] = data.get('first_name')
+
+    # check last_name
+    if data.get('last_name'):
+        validated_data['last_name'] = data.get('last_name')
+
+    # check email
+    if data.get('email'):
+        errors['email'] = 'Email address cannot be changed.'
+
+    # check password
+    if data.get('password'):
+        validated_data['password'] = data.get('password')
+
+        # check if password and confirm password match
+        if data.get('confirm_password') != data.get('password'):
+            errors['confirm_password'] = 'Password and Confirm password ' \
+                                         'must match'
+
+    # check profile picture
+    if data.get('profile_picture'):
+        validated_data['profile_picture'] = data.get('profile_picture')
+
+    # check cover picture
+    if data.get('cover_picture'):
+        validated_data['cover_picture'] = data.get('cover_picture')
+
+    # return errors
+    if len(errors) > 0:
+        raise ValidationError(errors)
+
+    # return validated data
+    return validated_data
+
+
+def user_can(permission):
+    payload = current_app.config.get('payload')
+    return check_permissions(permission, payload)

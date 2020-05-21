@@ -4,6 +4,8 @@ from flask import json
 
 from limbook_api.v1.friends import Friend, generate_friend, \
     generate_friend_request
+from limbook_api.v1.posts import generate_post
+from limbook_api.v1.users import generate_user
 from tests.base import BaseTestCase, test_user_id, api_base
 
 
@@ -35,7 +37,7 @@ class FriendsTestCase(BaseTestCase):
         # send friend requests
         res = self.client().post(
             api_base
-            + '/friend-requests'
+            + '/send-friend-request'
             + '?mock_token_verification=True'
         )
         data = json.loads(res.data)
@@ -43,9 +45,9 @@ class FriendsTestCase(BaseTestCase):
         self.assertEqual(data.get('error_code'), 'no_permission')
 
         # accept friend request
-        res = self.client().patch(
+        res = self.client().post(
             api_base
-            + '/friend-requests/1'
+            + '/accept-friend-request'
             + '?mock_token_verification=True'
         )
         data = json.loads(res.data)
@@ -74,17 +76,21 @@ class FriendsTestCase(BaseTestCase):
 
     def test_can_get_friends(self):
         # given
+        user1 = generate_user()
+        user2 = generate_user()
+        user3 = generate_user()
+        user4 = generate_user()
         generate_friend(
-            requester_id="auth|friend1",
+            requester_id=user1.id,
             receiver_id=test_user_id
         )
         generate_friend(
             requester_id=test_user_id,
-            receiver_id="auth|friend2"
+            receiver_id=user2.id
         )
         generate_friend(
-            requester_id="auth|other1",
-            receiver_id="auth|other2"
+            requester_id=user3.id,
+            receiver_id=user4.id
         )
 
         # get request initiated by test_user
@@ -98,6 +104,9 @@ class FriendsTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertTrue(len(data.get('friends')), 2)
+        self.assertTrue('first_name' in data.get('friends')[0])
+        self.assertTrue('last_name' in data.get('friends')[0])
+        self.assertTrue('profile_picture' in data.get('friends')[0])
         self.assertEqual(Friend.query.count(), 3)
 
     def test_can_get_friend_requests(self):
@@ -105,16 +114,16 @@ class FriendsTestCase(BaseTestCase):
         # Test user has receive 2 friend requests and other user has
         # received 1 request.
         generate_friend_request(
-            requester_id="auth|friend1",
+            requester_id=2,
             receiver_id=test_user_id
         )
         generate_friend_request(
-            requester_id="auth|friend2",
+            requester_id=3,
             receiver_id=test_user_id
         )
         generate_friend_request(
-            requester_id="auth|other1",
-            receiver_id="auth|other2"
+            requester_id=4,
+            receiver_id=5
         )
 
         # get request initiated by test_user
@@ -130,14 +139,14 @@ class FriendsTestCase(BaseTestCase):
         self.assertTrue(len(data.get('friend-requests')), 2)
         self.assertEqual(Friend.query.count(), 3)
 
-    def test_can_create_friend_request(self):
+    def test_can_send_friend_request(self):
         # given
-        user_id = "auth|friend"
+        user_id = 2
 
         # create friend request initiated by test user
         res = self.client().post(
             api_base
-            + '/friend-requests'
+            + '/send-friend-request'
             + '?mock_token_verification=True&permission=create:friends',
             json={"user_id": user_id}
         )
@@ -158,17 +167,18 @@ class FriendsTestCase(BaseTestCase):
         field to true and accept friend request.
         """
         # given
-        requester_id = "auth|friend"
+        requester_id = 2
         friend_request = generate_friend_request(
             requester_id=requester_id,
             receiver_id=test_user_id
         )
 
         # update request initiated by receiver
-        res = self.client().patch(
+        res = self.client().post(
             api_base
-            + '/friend-requests/' + str(friend_request.id)
-            + '?mock_token_verification=True&permission=update:friends'
+            + '/accept-friend-request'
+            + '?mock_token_verification=True&permission=create:friends',
+            json={"friend_request_id": friend_request.id}
         )
         data = json.loads(res.data)
 
@@ -180,22 +190,23 @@ class FriendsTestCase(BaseTestCase):
             "is_friend": True
         }.items())
 
-    def test_requester_or_other_cannot_update_friend_request(self):
+    def test_requester_or_other_cannot_accept_friend_request(self):
         """
         The requester or other user cannot update friends
         """
         # given
-        receiver_id = "auth|friend"
+        receiver_id = 2
         friend_request = generate_friend_request(
             requester_id=test_user_id,
             receiver_id=receiver_id
         )
 
         # update initiated by requester
-        res = self.client().patch(
+        res = self.client().post(
             api_base
-            + '/friend-requests/' + str(friend_request.id)
-            + '?mock_token_verification=True&permission=update:friends'
+            + '/accept-friend-request'
+            + '?mock_token_verification=True&permission=update:friends',
+            json={"friend_request_id": friend_request.id}
         )
 
         # assert

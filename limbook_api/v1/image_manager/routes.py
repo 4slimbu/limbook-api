@@ -53,7 +53,7 @@ def get_image(image_id):
             image (dist)
     """
     # get image
-    image = Image.query.first_or_404(image_id)
+    image = Image.query.filter(Image.id == image_id).first_or_404()
 
     # can retrieve own image only
     if image.user_id != auth_user_id():
@@ -119,7 +119,7 @@ def delete_images(image_id):
             delete_id (int)
     """
     # vars
-    image = Image.query.first_or_404(image_id)
+    image = Image.query.filter(Image.id == image_id).first_or_404()
 
     # can delete own image only
     if image.user_id != auth_user_id():
@@ -151,7 +151,7 @@ def attach_images_to_post(post_id):
             post (dict)
     """
     # vars
-    post = Post.query.first_or_404(post_id)
+    post = Post.query.filter(Post.id == post_id).first_or_404()
 
     # can attach images to own post only
     if post.user_id != auth_user_id():

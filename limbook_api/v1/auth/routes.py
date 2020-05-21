@@ -8,7 +8,7 @@ from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
     validate_verify_email_data, refresh_auth_token, requires_auth, \
     blacklist_token, send_verification_mail, send_reset_password_mail, \
-    get_token_from_auth_header
+    get_token_from_auth_header, auth_user_id, validate_profile_data
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)
@@ -77,6 +77,9 @@ def register():
     try:
         user.insert()
 
+        # send email
+        send_verification_mail(user)
+
         return jsonify({
             "success": True,
             "user": user.format()
@@ -133,16 +136,8 @@ def send_verification_email():
     user = User.query.filter(User.email == data.get('email')).first_or_404()
 
     try:
-        # generate verification code
-        verification_code = secrets.token_hex(8)
-
-        # save it to database
-        user.email_verif_code = verification_code
-        user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
-        user.update()
-
         # send email
-        send_verification_mail(user, verification_code)
+        send_verification_mail(user)
 
         return jsonify({
             "success": True
@@ -161,13 +156,14 @@ def verify_email():
     Returns:
         success (boolean) or 400 error
     """
-    data = validate_verify_email_data(request.get_json())
-    user = User.query.filter(
-        User.email_verif_code == data.get('verification_code'),
-        User.email_verif_code_expires_on > datetime.utcnow()
-    ).first_or_404()
 
     try:
+        data = validate_verify_email_data(request.get_json())
+        user = User.query.filter(
+            User.email_verif_code == data.get('verification_code'),
+            User.email_verif_code_expires_on > datetime.utcnow()
+        ).first()
+
         user.email_verified = True
         user.email_verif_code = None
         user.email_verif_code_expires_on = None
@@ -225,14 +221,14 @@ def reset_password():
     Returns:
         success (boolean) or 400 error
     """
-    data = validate_reset_password_data(request.get_json())
-    user = User.query.filter(
-        User.email == data.get('email'),
-        User.password_reset_code == data.get('password_reset_code'),
-        User.password_reset_code_expires_on > datetime.utcnow()
-    ).first_or_404()
-
     try:
+        data = validate_reset_password_data(request.get_json())
+        user = User.query.filter(
+            User.email == data.get('email'),
+            User.password_reset_code == data.get('password_reset_code'),
+            User.password_reset_code_expires_on > datetime.utcnow()
+        ).first()
+
         user.password = data.get('password')
         user.update()
 

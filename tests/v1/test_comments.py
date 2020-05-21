@@ -15,7 +15,7 @@ class CommentsTestCase(BaseTestCase):
         # get comments
         res = self.client().get(
             api_base
-            + '/posts/1/comments?mock_token_verification=True'
+            + '/comments?mock_token_verification=True'
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
@@ -24,7 +24,7 @@ class CommentsTestCase(BaseTestCase):
         # create comment
         res = self.client().post(
             api_base
-            + '/posts/1/comments?mock_token_verification=True'
+            + '/comments?mock_token_verification=True'
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
@@ -33,7 +33,7 @@ class CommentsTestCase(BaseTestCase):
         # update comment
         res = self.client().patch(
             api_base
-            + '/posts/1/comments/1?mock_token_verification=True'
+            + '/comments/1?mock_token_verification=True'
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
@@ -42,7 +42,7 @@ class CommentsTestCase(BaseTestCase):
         # delete comment
         res = self.client().delete(
             api_base
-            + '/posts/1/comments/1?mock_token_verification=True'
+            + '/comments/1?mock_token_verification=True'
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
@@ -51,7 +51,7 @@ class CommentsTestCase(BaseTestCase):
         # reply comment
         res = self.client().post(
             api_base
-            + '/posts/1/comments/1/replies?mock_token_verification=True'
+            + '/comments/1/replies?mock_token_verification=True'
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
@@ -68,7 +68,7 @@ class CommentsTestCase(BaseTestCase):
         # make request
         res = self.client().get(
             api_base
-            + '/posts/' + str(post.id) + '/comments'
+            + '/comments'
             + '?mock_token_verification=True&permission=read:comments'
         )
         data = json.loads(res.data)
@@ -89,7 +89,7 @@ class CommentsTestCase(BaseTestCase):
         # make request
         res = self.client().get(
             api_base
-            + '/posts/' + str(post.id) + '/comments'
+            + '/comments'
             + '?mock_token_verification=True&permission=read:comments'
             + '&page=2'
         )
@@ -105,12 +105,15 @@ class CommentsTestCase(BaseTestCase):
         # given
         post = generate_post()
         post_id = post.id
-        comment = {"content": "My new Comment"}
+        comment = {
+            "post_id": post_id,
+            "content": "My new Comment"
+        }
 
         # make request
         res = self.client().post(
             api_base
-            + '/posts/' + str(post.id) + '/comments'
+            + '/comments'
             + '?mock_token_verification=True&permission=create:comments',
             json=comment
         )
@@ -139,7 +142,7 @@ class CommentsTestCase(BaseTestCase):
         # make request
         res = self.client().patch(
             api_base
-            + '/posts/' + str(post.id) + '/comments/' + str(comment.id)
+            + '/comments/' + str(comment.id)
             + '?mock_token_verification=True&permission=update:comments',
             json=updated_comment_content
         )
@@ -163,7 +166,7 @@ class CommentsTestCase(BaseTestCase):
         # make request
         res = self.client().delete(
             api_base
-            + '/posts/' + str(post.id) + '/comments/' + str(comment.id)
+            + '/comments/' + str(comment.id)
             + '?mock_token_verification=True&permission=delete:comments'
         )
         data = json.loads(res.data)
@@ -186,7 +189,6 @@ class CommentsTestCase(BaseTestCase):
         # reply to comment
         res = self.client().post(
             api_base
-            + '/posts/' + str(post_id)
             + '/comments/' + str(comment_id) + '/replies'
             + '?mock_token_verification=True&permission=create:comments',
             json=reply
@@ -218,7 +220,6 @@ class CommentsTestCase(BaseTestCase):
         # reply to comment
         res = self.client().post(
             api_base
-            + '/posts/' + str(post_id)
             + '/comments/' + str(comment_id) + '/replies'
             + '?mock_token_verification=True&permission=create:comments',
             json=reply
@@ -231,7 +232,6 @@ class CommentsTestCase(BaseTestCase):
         # reply to reply
         res = self.client().post(
             api_base
-            + '/posts/' + str(post_id)
             + '/comments/' + str(data.get('comment').get('id')) + '/replies'
             + '?mock_token_verification=True&permission=create:comments',
             json=reply
@@ -244,7 +244,6 @@ class CommentsTestCase(BaseTestCase):
         # reply to reply of reply
         res = self.client().post(
             api_base
-            + '/posts/' + str(post_id)
             + '/comments/' + str(data.get('comment').get('id')) + '/replies'
             + '?mock_token_verification=True&permission=create:comments',
             json=reply

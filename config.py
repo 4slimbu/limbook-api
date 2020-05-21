@@ -37,29 +37,27 @@ class Config:
     # manage:item -> can manage everything related to item
     # manage_self:item -> can manage own item
     INITIAL_ROLES_AND_PERMISSIONS = {
-        "super_admin": ['manage:all'],
         "admin": [
-            'manage:users', 'manage:roles', 'manage:permissions',
-            'manage:activities', 'manage:friends', 'manage:images',
-            'manage:posts', 'manage:comments', 'manage:reacts',
-            'manage:self', 'manage_self:posts', 'manage_self:comments',
-            'manage_self:reacts', 'manage_self:friends', 'manage_self:images',
-            'manage_self:activities'
-        ],
-        "moderator": [
-            'manage:posts', 'manage:comments', 'manage:reacts',
-            'manage:self', 'manage_self:posts', 'manage_self:comments',
-            'manage_self:reacts', 'manage_self:friends', 'manage_self:images',
-            'manage_self:activities'
+            'read:users', 'create:users', 'update:users', 'delete:users',
+            'read:roles', 'create:roles', 'update:roles', 'delete:roles',
+            'read:permissions', 'create:permissions', 'update:permissions',
+            'delete:permissions',
+            'read:posts', 'create:posts', 'update:posts', 'delete:posts',
+            'read:comments', 'create:comments', 'update:comments',
+            'delete:comments',
+            'read:reacts', 'create:reacts', 'update:reacts', 'delete:reacts',
+            'read:images', 'create:images', 'update:images', 'delete:images',
+            'read:friends', 'create:friends', 'update:friends', 'delete:friends'
         ],
         "user": [
-            'manage:self', 'manage_self:posts', 'manage_self:comments',
-            'manage_self:reacts', 'manage_self:friends', 'manage_self:images',
-            'manage_self:activities'
+            'read:posts', 'create:posts', 'update:posts', 'delete:posts',
+            'read:comments', 'create:comments', 'update:comments',
+            'delete:comments',
+            'read:reacts', 'create:reacts', 'update:reacts', 'delete:reacts',
+            'read:images', 'create:images', 'update:images', 'delete:images',
+            'read:friends', 'create:friends', 'update:friends', 'delete:friends'
         ],
-        "unverified_user": [
-            'manage:self'
-        ]
+        "unverified_user": []
     }
 
     # -------------------------------------------
@@ -97,7 +95,7 @@ class Config:
     }
 
     # Image upload directory
-    IMG_UPLOAD_DIR = 'limbook_api/static/img/uploads'
+    IMG_UPLOAD_DIR = '/static/img/uploads'
 
     # -------------------------------------------
     # Email

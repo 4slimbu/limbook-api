@@ -18,3 +18,4 @@ build/
 env_file
 .env
 limbook_api/test.db
+limbook_api/static/img/uploads
