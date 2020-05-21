@@ -52,6 +52,10 @@ flask db upgrade
 Seed demo data
 ```shell script
 flask seed run
+# Security Note: seed data has some default users with password.
+# admin@gmail.com/password
+# verified_user@gmail.com/password
+# unverified_user@gmail.com/password
 ```
 
 ## Test
@@ -77,7 +81,7 @@ db.session.add(post)
 
 ## Contribution
 If you want to contribute, just fork the repository and play around, create 
-issues and submit pull request. Help is always welcomed.
+issues and submit the pull request. Help is always welcomed.
 
 ## Security
 If you discover any security related issues, please email hello@sudiplimbu.com 
