@@ -12,6 +12,22 @@ from tests.base import BaseTestCase, test_user_id, api_base, pagination_limit
 class ImageManagerTestCase(BaseTestCase):
     """This class represents the test case for Image Manager"""
 
+    def check_if_image_exists(self, url):
+        self.assertTrue(
+            os.path.isfile(self.app.root_path + url.get('large')))
+        self.assertTrue(
+            os.path.isfile(self.app.root_path + url.get('medium')))
+        self.assertTrue(
+            os.path.isfile(self.app.root_path + url.get('thumb')))
+
+    def check_if_image_does_not_exists(self, url):
+        self.assertFalse(
+            os.path.isfile(self.app.root_path + url.get('large')))
+        self.assertFalse(
+            os.path.isfile(self.app.root_path + url.get('medium')))
+        self.assertFalse(
+            os.path.isfile(self.app.root_path + url.get('thumb')))
+
     def test_cannot_access_image_routes_without_correct_permission(self):
         # create image
         res = self.client().post(
@@ -54,7 +70,7 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_cannot_retrieve_other_images(self):
-        """ I can only retrieve my images """
+        """ I can only retrieve personal images """
         # given
         image = generate_image()
 
@@ -72,7 +88,7 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(data.get('total'), 0)
 
     def test_can_retrieve_own_images_with_pagination(self):
-        """ I can retrieve all my images with pagination"""
+        """ I can retrieve all personal images with pagination"""
         # given
         for i in range(0, 15):
             generate_image(user_id=test_user_id)
@@ -167,12 +183,7 @@ class ImageManagerTestCase(BaseTestCase):
         # assert
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('image').get('user_id'), test_user_id)
-        self.assertTrue(
-            os.path.isfile(data.get('image').get('url').get('large')))
-        self.assertTrue(
-            os.path.isfile(data.get('image').get('url').get('medium')))
-        self.assertTrue(
-            os.path.isfile(data.get('image').get('url').get('thumb')))
+        self.check_if_image_exists(data.get('image').get('url'))
 
     def test_cannot_retrieve_others_image_by_id(self):
         """ User should not be able to retrieve other images
@@ -241,7 +252,7 @@ class ImageManagerTestCase(BaseTestCase):
 
     def test_can_delete_own_image(self):
         """
-        I should be able to delete my image
+        I should be able to delete personal image
         """
         # given
         image = (io.BytesIO(generate_img_in_bytes()), 'test.jpg')
@@ -268,12 +279,7 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('success'), True)
         self.assertEqual(data.get('deleted_id'), image.get('id'))
-        self.assertFalse(
-            os.path.isfile(image.get('url').get('large')))
-        self.assertFalse(
-            os.path.isfile(image.get('url').get('medium')))
-        self.assertFalse(
-            os.path.isfile(image.get('url').get('thumb')))
+        self.check_if_image_does_not_exists(image.get('url'))
 
     # -------------------------------------------------
     # Test involving posts

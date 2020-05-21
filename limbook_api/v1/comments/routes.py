@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, abort, request
 
 from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.comments import Comment, filter_comments, \
-    validate_comment_data
+    validate_comment_data, validate_comment_create_data
 
 comments = Blueprint('comments', __name__)
 
@@ -10,14 +10,15 @@ comments = Blueprint('comments', __name__)
 # ====================================
 # ROUTES
 # ====================================
-@comments.route("/posts/<int:post_id>/comments", methods=['GET'])
+@comments.route("/comments", methods=['GET'])
 @requires_auth('read:comments')
-def get_comments(post_id):
+def get_comments():
     """ Get all available comments
 
         Query Parameters:
              search_term (str)
              page (int)
+             post_id (int)
 
         Returns:
             success (boolean)
@@ -29,24 +30,41 @@ def get_comments(post_id):
         return jsonify({
             'success': True,
             'comments': [
-                comment.format() for comment in filter_comments(post_id)
+                comment.format() for comment in filter_comments()
             ],
-            'total': filter_comments(post_id, count_only=True),
+            'total': filter_comments(count_only=True),
             'query_args': request.args,
         })
     except Exception as e:
         abort(400)
 
 
-@comments.route("/posts/<int:post_id>/comments", methods=['POST'])
+@comments.route("/comments/<int:comment_id>", methods=['GET'])
+@requires_auth('read:comments')
+def get_comment(comment_id):
+    """ Get comment
+
+        Returns:
+            success (boolean)
+            comment (dict)
+    """
+    comment = Comment.query.filter(Comment.id == comment_id).first_or_404()
+    try:
+        return jsonify({
+            'success': True,
+            'comment': comment.format()
+        })
+    except Exception as e:
+        abort(400)
+
+
+@comments.route("/comments", methods=['POST'])
 @requires_auth('create:comments')
-def create_comments(post_id):
+def create_comments():
     """ Create new comments
 
-        Parameters:
-            post_id (int): Id of post to which comment will belong
-
         Post data:
+            post_id (int): Id of post to which comment will belong
             content (string): Content for the comment
 
         Returns:
@@ -56,13 +74,13 @@ def create_comments(post_id):
     # vars
     data = request.get_json()
 
-    validate_comment_data(data)
+    validate_comment_create_data(data)
 
     # create comment
     comment = Comment(**{
         'content': data.get('content'),
         'user_id': auth_user_id(),
-        'post_id': post_id
+        'post_id': data.get('post_id')
     })
 
     try:
@@ -77,13 +95,12 @@ def create_comments(post_id):
 
 
 @comments.route(
-    "/posts/<int:post_id>/comments/<int:comment_id>", methods=['PATCH'])
+    "/comments/<int:comment_id>", methods=['PATCH'])
 @requires_auth('update:comments')
-def update_comments(post_id, comment_id):
+def update_comments(comment_id):
     """ Update comments
 
         Parameters:
-            post_id (int): Id of post to which comment belong
             comment_id (int): Id of comment
 
         Patch data:
@@ -100,7 +117,7 @@ def update_comments(post_id, comment_id):
     validate_comment_data(data)
 
     # get comment
-    comment = Comment.query.first_or_404(comment_id)
+    comment = Comment.query.filter(Comment.id == comment_id).first_or_404()
 
     # can update own comment only
     if comment.user_id != auth_user_id():
@@ -119,14 +136,12 @@ def update_comments(post_id, comment_id):
         abort(400)
 
 
-@comments.route(
-    "/posts/<int:post_id>/comments/<int:comment_id>", methods=['DELETE'])
+@comments.route("/comments/<int:comment_id>", methods=['DELETE'])
 @requires_auth('delete:comments')
-def delete_comments(post_id, comment_id):
+def delete_comments(comment_id):
     """ Delete comments
 
         Parameters:
-            post_id (int): Id of post on which comment was made
             comment_id (int): Id of comment
 
         Returns:
@@ -134,7 +149,7 @@ def delete_comments(post_id, comment_id):
             deleted_id (int)
     """
     # vars
-    comment = Comment.query.first_or_404(comment_id)
+    comment = Comment.query.filter(Comment.id == comment_id).first_or_404()
 
     # can delete own comment only
     if comment.user_id != auth_user_id():
@@ -150,14 +165,12 @@ def delete_comments(post_id, comment_id):
         abort(400)
 
 
-@comments.route(
-    "/posts/<int:post_id>/comments/<int:comment_id>/replies", methods=['POST'])
+@comments.route("/comments/<int:comment_id>/replies", methods=['POST'])
 @requires_auth('create:comments')
-def reply_comments(post_id, comment_id):
+def reply_comments(comment_id):
     """ Reply comments
 
         Parameters:
-            post_id (int): Id of post on which comment was made
             comment_id (int): Id of comment
 
         Post Data:
@@ -172,7 +185,7 @@ def reply_comments(post_id, comment_id):
     validate_comment_data(data)
 
     # get comment
-    comment = Comment.query.first_or_404(comment_id)
+    comment = Comment.query.filter(Comment.id == comment_id).first_or_404()
 
     try:
         # reply comment
@@ -180,7 +193,7 @@ def reply_comments(post_id, comment_id):
             'content': data.get('content'),
             'parent_id': comment.parent_id if comment.parent_id else comment.id,
             'user_id': auth_user_id(),
-            'post_id': post_id
+            'post_id': comment.post_id
         })
         reply.insert()
 

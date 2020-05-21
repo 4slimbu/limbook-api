@@ -48,7 +48,7 @@ def get_role(role_id):
             role (list)
     """
     try:
-        role = Role.query.first_or_404(role_id)
+        role = Role.query.filter(Role.id == role_id).first_or_404()
         return jsonify({
             'success': True,
             'role': role.format()
@@ -96,8 +96,9 @@ def update_roles(role_id):
             role_id (int): Id of role
 
         Patch data:
-            name (string)
-            description (string)
+            name (string | optional)
+            description (string | optional)
+            permission_ids (list | optional)
 
         Returns:
             success (boolean)
@@ -107,7 +108,7 @@ def update_roles(role_id):
     data = validate_role_update_data(request.get_json())
 
     # get role
-    role = Role.query.first_or_404(role_id)
+    role = Role.query.filter(Role.id == role_id).first_or_404()
 
     # TODO: implement this
     # can update own role only
@@ -137,7 +138,7 @@ def delete_roles(role_id):
             deleted_id (int)
     """
     # vars
-    role = Role.query.first_or_404(role_id)
+    role = Role.query.filter(Role.id == role_id).first_or_404()
 
     # TODO: implement this
     # can delete own role only
@@ -170,7 +171,7 @@ def assign_permissions(role_id):
             role (dict)
     """
     # vars
-    role = Role.query.first_or_404(role_id)
+    role = Role.query.filter(Role.id == role_id).first_or_404()
 
     # TODO: implement this
     # can delete own role only

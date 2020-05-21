@@ -48,55 +48,6 @@ def logout():
     })
 
 
-@auth.route("/profile", methods=['GET'])
-@requires_auth()
-def get_profile():
-    """ Get auth user info
-
-    Returns:
-        success (boolean)
-        user (dict)
-    """
-    user = User.query.filter(User.id == auth_user_id()).first_or_404()
-    return jsonify({
-        "success": True,
-        "user": user.format()
-    })
-
-
-@auth.route("/profile", methods=['PATCH'])
-@requires_auth()
-def update_profile():
-    """ Update profile
-
-    Patch data:
-        first_name (string)
-        last_name (string)
-        phone_number (string)
-        password (string)
-        confirm_password (string)
-        profile_picture (string)
-        cover_picture (string)
-
-    Returns:
-        success (boolean)
-        user (dict)
-    """
-    data = validate_profile_data(request.get_json())
-
-    # get user
-    user = User.query.first_or_404(auth_user_id())
-
-    try:
-        user.query.update(data)
-        return jsonify({
-            "success": True,
-            "user": user.format()
-        })
-    except Exception as e:
-        abort(400)
-
-
 # ====================================
 # PUBLIC ROUTES
 # ====================================
@@ -125,6 +76,9 @@ def register():
 
     try:
         user.insert()
+
+        # send email
+        send_verification_mail(user)
 
         return jsonify({
             "success": True,
@@ -182,16 +136,8 @@ def send_verification_email():
     user = User.query.filter(User.email == data.get('email')).first_or_404()
 
     try:
-        # generate verification code
-        verification_code = secrets.token_hex(8)
-
-        # save it to database
-        user.email_verif_code = verification_code
-        user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
-        user.update()
-
         # send email
-        send_verification_mail(user, verification_code)
+        send_verification_mail(user)
 
         return jsonify({
             "success": True
@@ -210,13 +156,14 @@ def verify_email():
     Returns:
         success (boolean) or 400 error
     """
-    data = validate_verify_email_data(request.get_json())
-    user = User.query.filter(
-        User.email_verif_code == data.get('verification_code'),
-        User.email_verif_code_expires_on > datetime.utcnow()
-    ).first_or_404()
 
     try:
+        data = validate_verify_email_data(request.get_json())
+        user = User.query.filter(
+            User.email_verif_code == data.get('verification_code'),
+            User.email_verif_code_expires_on > datetime.utcnow()
+        ).first()
+
         user.email_verified = True
         user.email_verif_code = None
         user.email_verif_code_expires_on = None
@@ -274,14 +221,14 @@ def reset_password():
     Returns:
         success (boolean) or 400 error
     """
-    data = validate_reset_password_data(request.get_json())
-    user = User.query.filter(
-        User.email == data.get('email'),
-        User.password_reset_code == data.get('password_reset_code'),
-        User.password_reset_code_expires_on > datetime.utcnow()
-    ).first_or_404()
-
     try:
+        data = validate_reset_password_data(request.get_json())
+        user = User.query.filter(
+            User.email == data.get('email'),
+            User.password_reset_code == data.get('password_reset_code'),
+            User.password_reset_code_expires_on > datetime.utcnow()
+        ).first()
+
         user.password = data.get('password')
         user.update()
 

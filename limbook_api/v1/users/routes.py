@@ -29,10 +29,29 @@ def get_users():
         return jsonify({
             'success': True,
             'users': [
-                user.format() for user in filter_users()
+                user.short_format() for user in filter_users()
             ],
             'total': filter_users(count_only=True),
             'query_args': request.args,
+        })
+    except Exception as e:
+        abort(400)
+
+
+@users.route("/users/<int:user_id>", methods=['GET'])
+@requires_auth('read:users')
+def get_user(user_id):
+    """ Get user by id
+
+        Returns:
+            success (boolean)
+            user (list)
+    """
+    try:
+        user = User.query.filter(User.id == user_id).first_or_404()
+        return jsonify({
+            'success': True,
+            'user': user.format()
         })
     except Exception as e:
         abort(400)
@@ -44,14 +63,15 @@ def create_users():
     """ Create new users
 
         Post data:
-            first_name (string)
-            last_name (string)
-            email (string)
-            phone_number (string)
-            password (string)
-            confirm_password (string)
-            profile_picture (string)
-            cover_picture (string)
+            first_name (string | required)
+            last_name (string | required)
+            email (string | required)
+            phone_number (string | required)
+            password (string | required)
+            confirm_password (string | required)
+            profile_picture (string | optional)
+            cover_picture (string | optional)
+            role_id (int | required)
 
         Returns:
             success (boolean)
@@ -101,12 +121,7 @@ def update_users(user_id):
     data = validate_user_update_data(request.get_json())
 
     # get user
-    user = User.query.first_or_404(user_id)
-
-    # TODO: implement this
-    # can update own user only
-    # if user.id != auth_user_id():
-    #     abort(403)
+    user = User.query.filter(User.id == user_id).first_or_404()
 
     try:
         user.query.update(data)
@@ -132,7 +147,7 @@ def delete_users(user_id):
             deleted_id (int)
     """
     # vars
-    user = User.query.first_or_404(user_id)
+    user = User.query.filter(User.id == user_id).first_or_404()
 
     # TODO: implement this
     # can delete own user only

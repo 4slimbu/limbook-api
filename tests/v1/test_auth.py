@@ -6,54 +6,12 @@ from flask import json
 
 from limbook_api.v1.permissions import generate_permission
 from limbook_api.v1.users import generate_user, generate_role, User
-from tests.base import BaseTestCase, api_base
+from tests.base import BaseTestCase, api_base, get_access_token, \
+    login_random_user, header_with_token, assert_successful_login
 
 
 class UserTestCase(BaseTestCase):
     """This class represents the test case for Users"""
-    # Helper methods -------------------------
-
-    @staticmethod
-    def header_with_token(token):
-        return {'Authorization': 'Bearer ' + token}
-
-    def get_access_token(self, permissions=None):
-        permissions = permissions if permissions else []
-        role = generate_role(permissions=permissions)
-        user = generate_user(role_id=role.id, password="password")
-
-        login_data = {
-            "email": user.email,
-            "password": "password",
-        }
-
-        res = self.client().post(
-            api_base + '/login',
-            json=login_data
-        )
-
-        return json.loads(res.data).get('access_token')
-
-    def login_random_user(self):
-        user = generate_user(password="password")
-        login_data = {
-            "email": user.email,
-            "password": "password",
-        }
-
-        return self.client().post(
-            api_base + '/login',
-            json=login_data
-        )
-
-    def assert_successful_login(self, res):
-        data = json.loads(res.data)
-
-        # assert
-        self.assertEqual(res.status_code, 200)
-        self.assertTrue(data.get('success'))
-        self.assertTrue(data.get('access_token'))
-        self.assertTrue(data.get('refresh_token'))
 
     # Auth Token and Permission Tests -----------------------------
 
@@ -69,7 +27,7 @@ class UserTestCase(BaseTestCase):
 
     def test_cannot_access_protected_route_with_invalid_token(self):
         # given
-        headers = {'Authorization': self.app.config.get('EXAMPLE_INVALID_TOKEN')}
+        headers = header_with_token(self.app.config.get('EXAMPLE_INVALID_TOKEN'))
 
         # make request
         res = self.client().get(
@@ -85,7 +43,7 @@ class UserTestCase(BaseTestCase):
 
     def test_cannot_access_protected_route_with_expired_token(self):
         # given
-        headers = {'Authorization': self.app.config.get('EXPIRED_TOKEN')}
+        headers = header_with_token(self.app.config.get('EXPIRED_TOKEN'))
 
         # make request
         res = self.client().get(
@@ -120,7 +78,7 @@ class UserTestCase(BaseTestCase):
         """
         # request
         permission = generate_permission(slug='read:secure_route')
-        token = self.get_access_token(permissions=[permission])
+        token = get_access_token(self, permissions=[permission])
         headers = {'Authorization': 'Bearer ' + token}
         res = self.client().get(
             api_base + '/secure-route',
@@ -129,6 +87,23 @@ class UserTestCase(BaseTestCase):
 
         # assert
         self.assertEqual(res.status_code, 200)
+
+    def test_unverified_user_cannot_access_secure_routes(self):
+        # login random user and get tokens
+        res = login_random_user(self, is_verified=False)
+        data = json.loads(res.data)
+        access_token = data.get('access_token')
+
+        # make request
+        res = self.client().get(
+            api_base + '/profile',
+            headers=header_with_token(access_token)
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'user_not_verified')
 
     # Auth User Tests ----------------------------------------------
 
@@ -251,12 +226,12 @@ class UserTestCase(BaseTestCase):
         self.assertTrue(data.get('refresh_token'))
 
     def test_user_can_login(self):
-        res = self.login_random_user()
-        self.assert_successful_login(res)
+        res = login_random_user(self)
+        assert_successful_login(self, res)
 
     def test_user_can_refresh_access_token(self):
         # login random user and get tokens
-        res = self.login_random_user()
+        res = login_random_user(self)
         data = json.loads(res.data)
         refresh_token = data.get('refresh_token')
 
@@ -277,7 +252,7 @@ class UserTestCase(BaseTestCase):
 
     def test_user_can_logout(self):
         # login random user and get tokens
-        res = self.login_random_user()
+        res = login_random_user(self)
         data = json.loads(res.data)
         access_token = data.get('access_token')
         refresh_token = data.get('refresh_token')
@@ -289,7 +264,7 @@ class UserTestCase(BaseTestCase):
             json={
                 "refresh_token": refresh_token
             },
-            headers=self.header_with_token(access_token)
+            headers=header_with_token(access_token)
         )
 
         # assert
@@ -299,7 +274,7 @@ class UserTestCase(BaseTestCase):
         res = self.client().post(
             api_base
             + '/logout',
-            headers=self.header_with_token(access_token)
+            headers=header_with_token(access_token)
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)
@@ -309,7 +284,7 @@ class UserTestCase(BaseTestCase):
         res = self.client().post(
             api_base
             + '/logout',
-            headers=self.header_with_token(refresh_token)
+            headers=header_with_token(refresh_token)
         )
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 401)

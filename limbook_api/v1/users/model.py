@@ -27,6 +27,23 @@ class User(BaseDbModel):
         lazy=True
     )
 
+    def short_format(self):
+        """ Short format the data for the api """
+
+        return {
+            'id': self.id,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'email': self.email,
+            'phone_number': self.phone_number,
+            'profile_picture': self.profile_picture,
+            'cover_picture': self.cover_picture,
+            'role_id': self.role_id,
+            'role': self.role.slug,
+            'created_on': self.created_on.__str__(),
+            'updated_on': self.updated_on.__str__(),
+        }
+
     """
     format()
         format the data for the api

@@ -193,6 +193,7 @@ def encode_auth_token(user, valid_seconds):
             'exp': datetime.utcnow() + timedelta(seconds=valid_seconds),
             'iat': datetime.utcnow(),
             'sub': str(user.id),
+            'is_verified': user.email_verified,
             'permissions': user.format().get('permissions'),
             # while testing, tokens are generated in quick succession and
             # for same payload, it is not possible to differentiate them
@@ -338,6 +339,12 @@ def requires_auth(permission=''):
 
             current_app.config['payload'] = payload
 
+            if not payload.get('is_verified'):
+                raise AuthError({
+                    'code': 'user_not_verified',
+                    'description': 'Please verify your email.'
+                }, 401)
+
             if not check_permissions(permission, payload):
                 raise AuthError({
                     'code': 'no_permission',
@@ -356,7 +363,7 @@ def auth_user_id():
     if payload is None:
         abort(401)
 
-    return payload.get('sub')
+    return int(payload.get('sub'))
 
 
 def blacklist_token(token):
@@ -369,7 +376,16 @@ def is_token_blacklisted(token):
     return cache.get(token) == 'blacklisted'
 
 
-def send_verification_mail(user, verification_code):
+def send_verification_mail(user):
+    # generate verification code
+    verification_code = secrets.token_hex(8)
+
+    # save it to database
+    user.email_verif_code = verification_code
+    user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
+    user.update()
+
+    # send mail
     msg = Message(
         'Verify Email Request',
         sender='noreply@demo.com',
@@ -437,3 +453,8 @@ def validate_profile_data(data):
 
     # return validated data
     return validated_data
+
+
+def user_can(permission):
+    payload = current_app.config.get('payload')
+    return check_permissions(permission, payload)
