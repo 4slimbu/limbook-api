@@ -3,6 +3,8 @@ from sqlalchemy import or_
 
 from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.friends import Friend, filter_friends
+from limbook_api.v1.posts import filter_posts
+from limbook_api.v1.users import User
 
 friends = Blueprint('friends', __name__)
 
@@ -22,11 +24,27 @@ def get_friends():
             query_args (dict)
     """
     try:
+        user_ids = [
+            (
+                friend.requester_id if friend.requester_id != auth_user_id()
+                else friend.receiver_id
+            ) for friend in filter_friends()
+        ]
+
+        users = User.query.filter(User.id.in_(user_ids)).all()
+
+        friends = []
+        for friend in users:
+            friends.append({
+                "id": friend.id,
+                "first_name": friend.first_name,
+                "last_name": friend.last_name,
+                "profile_picture": friend.profile_picture
+            })
+
         return jsonify({
             'success': True,
-            'friends': [
-                friend.format() for friend in filter_friends()
-            ],
+            'friends': friends,
             'total': filter_friends(count_only=True),
             'query_args': request.args,
         })
@@ -60,9 +78,9 @@ def get_friend_requests():
         abort(400)
 
 
-@friends.route("/friend-requests", methods=['POST'])
+@friends.route("/send-friend-request", methods=['POST'])
 @requires_auth('create:friends')
-def create_friend_requests():
+def send_friend_requests():
     """ Send friend request
 
         Post data:
@@ -72,27 +90,34 @@ def create_friend_requests():
             success (boolean)
             friend-request (dict)
     """
-    data = request.get_json()
-    receiver_id = data.get('user_id')
+    try:
+        data = request.get_json()
+        receiver_id = data.get('user_id')
 
-    # See if friend request already exists
-    friend = Friend.query.filter(
-        or_(
+        # See if friend request already exists
+        friend_request_sent = Friend.query.filter(
             Friend.requester_id == auth_user_id(),
-            Friend.receiver_id == auth_user_id()
-        )
-    ).filter(Friend.is_friend == False).first()
+            Friend.receiver_id == receiver_id,
+            Friend.is_friend == False
+        ).first()
 
-    if friend is None:
+        friend_request_received = Friend.query.filter(
+            Friend.requester_id == receiver_id,
+            Friend.receiver_id == auth_user_id(),
+            Friend.is_friend == False
+        ).first()
+
+        if friend_request_sent is None and friend_request_received is None:
+            pass
+        else:
+            abort(400)
+
         friend = Friend(**{
             "requester_id": auth_user_id(),
             "receiver_id": receiver_id,
             "is_friend": False
         })
-    else:
-        abort(400)
 
-    try:
         friend.insert()
 
         return jsonify({
@@ -104,20 +129,22 @@ def create_friend_requests():
         abort(400)
 
 
-@friends.route("/friend-requests/<int:friend_request_id>", methods=['PATCH'])
-@requires_auth('update:friends')
-def update_friend_requests(friend_request_id):
-    """ Update friends
+@friends.route("/accept-friend-request", methods=['POST'])
+@requires_auth('create:friends')
+def accept_friend_requests():
+    """ Accept friend request
 
-        Parameters:
-            friend_request_id (string): Friend Id
+        Post data:
+            friend_request_id (string): Id of friend request
 
         Returns:
             success (boolean)
             friend-request (dict)
     """
+    data = request.get_json()
+    friend_request_id = data.get('friend_request_id')
 
-    friend = Friend.query.first_or_404(friend_request_id)
+    friend = Friend.query.filter(Friend.id == friend_request_id).first_or_404()
 
     if friend.receiver_id != auth_user_id():
         abort(401)
@@ -155,7 +182,7 @@ def delete_friends(friend_id):
             deleted_id (string)
     """
 
-    friend = Friend.query.first_or_404(friend_id)
+    friend = Friend.query.filter(Friend.id == friend_id).first_or_404()
 
     # only friend requester or acceptor can terminate friendship
     if friend.requester_id != auth_user_id() \
@@ -190,7 +217,7 @@ def delete_friend_requests(friend_request_id):
             deleted_id (string)
     """
 
-    friend = Friend.query.first_or_404(friend_request_id)
+    friend = Friend.query.filter(Friend.id == friend_request_id).first_or_404()
 
     # only friend requester or acceptor can terminate friendship
     if friend.requester_id != auth_user_id() \

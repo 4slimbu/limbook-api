@@ -27,8 +27,8 @@ def get_post_reacts(post_id):
     try:
         return jsonify({
             'success': True,
-            'images': [
-                image.format() for image in filter_reacts(post_id)
+            'reacts': [
+                react.format() for react in filter_reacts(post_id)
             ],
             'total': filter_reacts(post_id, count_only=True),
             'query_args': request.args,
@@ -63,9 +63,9 @@ def toggle_post_reacts(post_id):
             # create react
             react = React(**{
                 'user_id': auth_user_id(),
+                'post_id': post_id
             })
-            post.reacts = [react]
-            post.update()
+            react.insert()
         else:
             # delete
             user_react.delete()

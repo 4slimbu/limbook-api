@@ -1,13 +1,19 @@
 # Limbook Api
-An api for social network.
+![](https://github.com/limvus/limbook-api/workflows/limbook-api-ci/badge.svg)
 
-**Under development. Please check back later.**
+Limbook api is a minimal api for creating social app like facebook or twitter. 
+It has basic features like user, role and permission management plus support 
+for posts, comments, react and friends. It is currently at version 1.0. More 
+features will be added in the next release, so keep checking for updates.
 
-**First release is scheduled for: May 20 2020**
+** For documentation of API visit here: **
+ 
+**[API DOCUMENTATION](https://documenter.getpostman.com/view/3230491/SzmmVueg)**
 
-**Feel free to contribute**
+## Features
 
-# Installation
+
+## Installation
 Using virtual environment
 ```shell script
 # go to project directory and create venv
@@ -22,10 +28,10 @@ $ pip install -r requirements.txt
 ```
 Export secrets
 ```shell script
-# in ~/.profile add these lines
+# in ~/.profile add your env variables. e.g:
 export SECRET_KEY='my_secret_key' #any random string
 export SQLALCHEMY_DATABASE_URI='sqlite:///site.db' #db path
-# logout and login
+# logout and login or
 $ source ~/.profile
 ```
 Run app
@@ -48,12 +54,13 @@ Seed demo data
 flask seed run
 ```
 
-# Test
+## Test
 ```shell script
-python -m unittest tests/app_test.py
+# Simply run pytest from the root directory.
+pytest
 ```
 
-# Debugging with python interpreter
+Debugging with python interpreter
 ```
 # in the command line
 python
@@ -67,3 +74,14 @@ from limbook_api.models import Post
 post = Post(user_id="id",content="my post")
 db.session.add(post)
 ```
+
+## Contribution
+If you want to contribute, just fork the repository and play around, create 
+issues and submit pull request. Help is always welcomed.
+
+## Security
+If you discover any security related issues, please email hello@sudiplimbu.com 
+instead of using the issue tracker.
+
+## Author
+Sudip Limbu

@@ -20,7 +20,7 @@ def generate_role(slug=None, name=None, description=None, permissions=None):
         'name': name if name else 'Role ' + str(randint(1000, 9999)),
         'description': description if description
         else 'Description ' + str(randint(1000, 9999)),
-        'permissions': permissions if permissions
+        'permissions': permissions if permissions != None
         else [generate_permission(), generate_permission()]
     })
 

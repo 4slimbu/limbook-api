@@ -60,19 +60,8 @@ class DemoSeeder(Seeder):
         # Generate users
         # ========================================
 
-        # Generate 5 test users
+        # Generate 3 test users
         # -----------------------------------------
-        super_admin = Role.query.filter(Role.slug == 'super_admin').first()
-        generate_user(
-            first_name="Super",
-            last_name="Admin",
-            email="superadmin@gmail.com",
-            email_verified=True,
-            password="password",
-            role_id=super_admin.id
-        )
-        print('Created User: Super Admin')
-
         admin = Role.query.filter(Role.slug == 'admin').first()
         generate_user(
             first_name="Admin",
@@ -83,17 +72,6 @@ class DemoSeeder(Seeder):
             role_id=admin.id
         )
         print('Created User: Admin')
-
-        moderator = Role.query.filter(Role.slug == 'moderator').first()
-        generate_user(
-            first_name="Moderator",
-            last_name="M",
-            email="moderator@gmail.com",
-            email_verified=True,
-            password="password",
-            role_id=moderator.id
-        )
-        print('Created User: Moderator')
 
         verified_user = Role.query.filter(Role.slug == 'user').first()
         generate_user(
@@ -111,17 +89,17 @@ class DemoSeeder(Seeder):
             first_name="Verified",
             last_name="User",
             email="unverified_user@gmail.com",
-            email_verified=True,
+            email_verified=False,
             password="password",
             role_id=unverified_user.id
         )
         print('Created User: Unverified User')
 
-        # Generate 20 random verified users
+        # Generate 27 random verified users
         # -----------------------------------------
-        for i in range(0, 21):
-            generate_user(email_verified=True)
-        print('Created 50 random verified users')
+        for i in range(0, 27):
+            generate_user(email_verified=True, role_id=2)
+        print('Created 27 random verified users')
 
         # ============================================================
         # Generate friends/friend-requests for verified test user
@@ -129,10 +107,9 @@ class DemoSeeder(Seeder):
         user = User.query.filter(
             User.email == 'verified_user@gmail.com').first()
         user_id = user.id
-        other_user_id = choice([i for i in range(6, 26) if i not in [user.id]])
 
         # generate friends
-        for j in range(6, 10):
+        for j in range(4, 10):
             generate_friend(
                 requester_id=user_id,
                 receiver_id=j,
@@ -180,7 +157,7 @@ class DemoSeeder(Seeder):
         print('Generated comments for posts')
 
         # ====================================================
-        # Generate comments for posts
+        # Generate reacts for posts
         # ====================================================
         for i in range(0, 5):
             post = Post.query.get(i + 1)

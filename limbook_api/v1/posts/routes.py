@@ -76,6 +76,34 @@ def create_posts():
         abort(400)
 
 
+@posts.route("/posts/<int:post_id>", methods=['GET'])
+@requires_auth('read:posts')
+def get_post(post_id):
+    """ Get a single post
+
+        Parameters:
+            post_id (int): Id of post
+
+        Returns:
+            success (boolean)
+            post (dict)
+    """
+    # get post
+    post = Post.query.filter(Post.id == post_id).first_or_404()
+
+    # can update own post only
+    if post.user_id != auth_user_id():
+        abort(403)
+
+    try:
+        return jsonify({
+            "success": True,
+            "post": post.format()
+        })
+    except Exception as e:
+        abort(400)
+
+
 @posts.route("/posts/<int:post_id>", methods=['PATCH'])
 @requires_auth('update:posts')
 def update_posts(post_id):
@@ -98,7 +126,7 @@ def update_posts(post_id):
     data = request.get_json()
 
     # get post
-    post = Post.query.first_or_404(post_id)
+    post = Post.query.filter(Post.id == post_id).first_or_404()
 
     # can update own post only
     if post.user_id != auth_user_id():
@@ -147,7 +175,7 @@ def delete_posts(post_id):
             deleted_post (dict)
     """
     # vars
-    post = Post.query.first_or_404(post_id)
+    post = Post.query.filter(Post.id == post_id).first_or_404()
 
     # can delete own post only
     if post.user_id != auth_user_id():
