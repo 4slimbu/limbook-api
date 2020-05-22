@@ -1,4 +1,4 @@
-  name: limbook-api-ci
+  name: Build And Test
 
   on:
     push:

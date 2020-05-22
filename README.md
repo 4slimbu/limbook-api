@@ -1,5 +1,5 @@
 # Limbook Api: 1.1.1
-![](https://github.com/limvus/limbook-api/workflows/limbook-api-ci/badge.svg)
+[![Actions Status](https://github.com/limvus/limbook-api/workflows/Build%20And%20Test/badge.svg)](https://github.com/limvus/limbook-api/actions)
 
 Limbook api is a minimal api for creating social app like facebook or twitter. 
 It has basic features like user, role and permission management plus support 
@@ -132,6 +132,9 @@ issues and submit the pull request. Help is always welcomed.
 ## Security
 If you discover any security related issues, please email hello@sudiplimbu.com 
 instead of using the issue tracker.
+
+## License
+The scripts and documentation in this project are released under the MIT License
 
 ## Author
 Sudip Limbu
