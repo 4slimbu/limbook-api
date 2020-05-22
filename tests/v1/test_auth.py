@@ -248,6 +248,8 @@ class UserTestCase(BaseTestCase):
         # assert
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
+        self.assertTrue(data.get('access_token'))
+        self.assertTrue(data.get('refresh_token'))
         self.assertNotEqual(data.get('refresh_token'), refresh_token)
 
     def test_user_can_logout(self):

@@ -245,9 +245,12 @@ def refresh_token():
 
     Returns:
         success (boolean)
+        access_token (string)
         refresh_token (string)
     """
+    tokens = refresh_auth_token()
     return jsonify({
         "success": True,
-        "refresh_token": refresh_auth_token()
+        "access_token": tokens.get('refresh_token'),
+        "refresh_token": tokens.get('refresh_token')
     })

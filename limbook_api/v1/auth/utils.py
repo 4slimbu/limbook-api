@@ -255,7 +255,7 @@ def refresh_auth_token():
     blacklist the token and generate new token
 
     Returns:
-        token (string)
+        tokens (dict): new access and refresh token
     """
     token = get_token_from_auth_header()
 
@@ -267,8 +267,17 @@ def refresh_auth_token():
         abort(400)
 
     blacklist_token(token)
+    valid_seconds = current_app.config.get('ACCESS_TOKEN_VALID_TIME')
+    access_token = encode_auth_token(user, valid_seconds=valid_seconds)
     valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
-    return encode_auth_token(user, valid_seconds=valid_seconds)
+    refresh_token = encode_auth_token(user, valid_seconds=valid_seconds)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token
+    }
+
+
 
 
 def decode_token(token):
