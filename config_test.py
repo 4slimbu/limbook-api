@@ -1,9 +1,13 @@
+import os
+
 from config import Config
 
 
 class TestConfig(Config):
     # Test db
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db?check_same_thread=False'
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'TEST_DATABASE_URL', 'sqlite:///test.db?check_same_thread=False'
+    )
 
     # Test Image directory
     IMG_UPLOAD_DIR = '/static/img/uploads/test'
