@@ -18,10 +18,12 @@ def generate_role(slug=None, name=None, description=None, permissions=None):
     role = Role(**{
         'slug': slug if slug else 'role_' + str(randint(1000, 9999)),
         'name': name if name else 'Role ' + str(randint(1000, 9999)),
-        'description': description if description
-        else 'Description ' + str(randint(1000, 9999)),
-        'permissions': permissions if permissions != None
-        else [generate_permission(), generate_permission()]
+        'description':
+            description if description
+            else 'Description ' + str(randint(1000, 9999)),
+        'permissions':
+            permissions if permissions is not None
+            else [generate_permission(), generate_permission()]
     })
 
     role.insert()

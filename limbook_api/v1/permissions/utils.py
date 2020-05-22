@@ -46,7 +46,9 @@ def validate_permission_data(data):
         errors['description'] = 'Description is required'
 
     if data.get('slug'):
-        permission = Permission.query.filter(Permission.slug == data.get('slug')).first()
+        permission = Permission.query.filter(
+            Permission.slug == data.get('slug')
+        ).first()
         if permission:
             errors['slug'] = 'Permission slug already exists'
 

@@ -98,13 +98,13 @@ def send_friend_requests():
         friend_request_sent = Friend.query.filter(
             Friend.requester_id == auth_user_id(),
             Friend.receiver_id == receiver_id,
-            Friend.is_friend == False
+            Friend.is_friend == 1
         ).first()
 
         friend_request_received = Friend.query.filter(
             Friend.requester_id == receiver_id,
             Friend.receiver_id == auth_user_id(),
-            Friend.is_friend == False
+            Friend.is_friend == 1
         ).first()
 
         if friend_request_sent is None and friend_request_received is None:

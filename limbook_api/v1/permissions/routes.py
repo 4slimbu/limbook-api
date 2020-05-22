@@ -48,14 +48,16 @@ def get_permission(permission_id):
             permission (list)
     """
     try:
-        permission = Permission.query.filter(Permission.id == permission_id).first_or_404()
+        permission = Permission.query.filter(
+            Permission.id == permission_id
+        ).first_or_404()
+
         return jsonify({
             'success': True,
             'permission': permission.format()
         })
     except Exception as e:
         abort(400)
-
 
 
 @permissions.route("/permissions", methods=['POST'])
@@ -108,7 +110,9 @@ def update_permissions(permission_id):
     data = validate_permission_update_data(request.get_json())
 
     # get permission
-    permission = Permission.query.filter(Permission.id == permission_id).first_or_404()
+    permission = Permission.query.filter(
+        Permission.id == permission_id
+    ).first_or_404()
 
     # TODO: implement this
     # can update own permission only
@@ -139,7 +143,9 @@ def delete_permissions(permission_id):
             deleted_id (int)
     """
     # vars
-    permission = Permission.query.filter(Permission.id == permission_id).first_or_404()
+    permission = Permission.query.filter(
+        Permission.id == permission_id
+    ).first_or_404()
 
     # TODO: implement this
     # can delete own permission only

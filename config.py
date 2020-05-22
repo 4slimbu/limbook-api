@@ -50,7 +50,8 @@ class Config:
             'delete:comments',
             'read:reacts', 'create:reacts', 'update:reacts', 'delete:reacts',
             'read:images', 'create:images', 'update:images', 'delete:images',
-            'read:friends', 'create:friends', 'update:friends', 'delete:friends'
+            'read:friends', 'create:friends', 'update:friends',
+            'delete:friends'
         ],
         "user": [
             'read:posts', 'create:posts', 'update:posts', 'delete:posts',
@@ -58,7 +59,8 @@ class Config:
             'delete:comments',
             'read:reacts', 'create:reacts', 'update:reacts', 'delete:reacts',
             'read:images', 'create:images', 'update:images', 'delete:images',
-            'read:friends', 'create:friends', 'update:friends', 'delete:friends'
+            'read:friends', 'create:friends', 'update:friends',
+            'delete:friends'
         ],
         "unverified_user": []
     }

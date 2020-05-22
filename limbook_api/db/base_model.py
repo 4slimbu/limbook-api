@@ -16,6 +16,7 @@ class BaseDbModel(db.Model):
     insert()
         inserts a new image into a database
     """
+
     def insert(self):
         db.session.add(self)
         db.session.commit()
@@ -25,6 +26,7 @@ class BaseDbModel(db.Model):
         updates image in the database
         the model must exist in the database
     """
+
     def update(self):
         db.session.commit()
 
@@ -33,6 +35,7 @@ class BaseDbModel(db.Model):
         deletes a image from the database
         the model must exist in the database
     """
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
@@ -41,6 +44,7 @@ class BaseDbModel(db.Model):
     format()
         format the data for the api
     """
+
     def format(self):
         return {
             'id': self.id
