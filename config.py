@@ -24,6 +24,9 @@ class Config:
     # Refresh token validity in seconds
     REFRESH_TOKEN_VALID_TIME = 60 * 60
 
+    # -------------------------------------------
+    # Demo
+    # -------------------------------------------
     # Initial roles and permissions
     #
     # It may not reflect the current roles and permissions in the system
@@ -59,6 +62,8 @@ class Config:
         ],
         "unverified_user": []
     }
+
+    DEMO_USER_PASSWORD = os.environ.get('DEMO_USER_PASSWORD', 'password')
 
     # -------------------------------------------
     # Flask-Caching
