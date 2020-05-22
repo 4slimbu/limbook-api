@@ -200,7 +200,7 @@ def generate_token(email, password, is_refresh_token=False):
             return encode_auth_token(user, valid_seconds=valid_seconds)
 
     else:
-        return None
+        abort(400)
 
 
 def encode_auth_token(user, valid_seconds):
