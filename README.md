@@ -1,11 +1,11 @@
-# Limbook Api: 1.1.0
+# Limbook Api: 1.1.1
 ![](https://github.com/limvus/limbook-api/workflows/limbook-api-ci/badge.svg)
 
 Limbook api is a minimal api for creating social app like facebook or twitter. 
 It has basic features like user, role and permission management plus support 
 for posts, comments, react and friends.
 
-** For documentation of API visit here: **
+**For documentation of API visit here:**
  
 **[API DOCUMENTATION](https://documenter.getpostman.com/view/3230491/SzmmVueg)**
 
@@ -20,7 +20,7 @@ for posts, comments, react and friends.
 - React
 - Image Manager
 
-** Upcoming Features **
+**Upcoming Features**
 - Chat
 - Notification
 - Activity
@@ -64,6 +64,7 @@ export MAIL_SERVER= # mail server host
 export MAIL_PORT= # mail server port
 export MAIL_USERNAME= # mail username
 export MAIL_PASSWORD= # mail password
+export DEMO_USER_PASSWORD= # password for demo seed user
 # logout and login or
 $ source ~/.profile
 ```
