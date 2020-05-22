@@ -30,6 +30,7 @@ features will be added in the next release, so keep checking for updates.
 ## System Requirements
 - Python >= 3.7
 - Pip >= 19.0
+- redis-server
 
 Note: may run in lower version but haven't tested.
 
@@ -81,6 +82,18 @@ flask seed run
 # admin@gmail.com/password
 # verified_user@gmail.com/password
 # unverified_user@gmail.com/password
+```
+Run Redis Server and Worker
+```shell script
+# if you want to use redis queue you need to enable redis server and worker
+# to run redis-server
+redis-server
+
+# to run worker
+python worker.py
+
+# or you can disable redis in the config: 
+USE_REDIS=False
 ```
 Run app
 ```shell script
