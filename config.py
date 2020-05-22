@@ -10,7 +10,7 @@ class Config:
     APP_URL = 'http://localhost:5000'
 
     # Enable debug mode
-    DEBUG = True
+    DEBUG = bool(os.environ.get('DEBUG', False))
 
     # App secret
     SECRET_KEY = os.environ.get('SECRET_KEY')

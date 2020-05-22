@@ -30,7 +30,7 @@ def filter_friends(request_only=False, count_only=False):
     # is friends
     if request_only:
         # filter requests only
-        query = query.filter(Friend.is_friend == 0)
+        query = query.filter(Friend.is_friend == bool(False))
 
         # request received by current user
         query = query.filter(
@@ -39,7 +39,7 @@ def filter_friends(request_only=False, count_only=False):
 
     else:
         # filter friends only
-        query = query.filter(Friend.is_friend == 1)
+        query = query.filter(Friend.is_friend == bool(True))
 
         # get friends
         query = query.filter(

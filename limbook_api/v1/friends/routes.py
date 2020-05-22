@@ -1,9 +1,7 @@
 from flask import Blueprint, jsonify, abort, request
-from sqlalchemy import or_
 
 from limbook_api.v1.auth.utils import requires_auth, auth_user_id
 from limbook_api.v1.friends import Friend, filter_friends
-from limbook_api.v1.posts import filter_posts
 from limbook_api.v1.users import User
 
 friends = Blueprint('friends', __name__)
@@ -98,13 +96,13 @@ def send_friend_requests():
         friend_request_sent = Friend.query.filter(
             Friend.requester_id == auth_user_id(),
             Friend.receiver_id == receiver_id,
-            Friend.is_friend == 1
+            Friend.is_friend == bool(True)
         ).first()
 
         friend_request_received = Friend.query.filter(
             Friend.requester_id == receiver_id,
             Friend.receiver_id == auth_user_id(),
-            Friend.is_friend == 1
+            Friend.is_friend == bool(True)
         ).first()
 
         if friend_request_sent is None and friend_request_received is None:
