@@ -41,8 +41,10 @@ class DemoSeeder(Seeder):
                 if permission is None:
                     permission = generate_permission(
                         slug=perm_slug,
-                        name=perm_slug.replace(':', ' ').replace('_', ' ').capitalize(),
-                        description=perm_slug.replace(':', ' ').replace('_', ' ').capitalize()
+                        name=perm_slug.replace(':', ' ').replace(
+                            '_', ' ').capitalize(),
+                        description=perm_slug.replace(':', ' ').replace(
+                            '_', ' ').capitalize()
                     )
 
                 p_list.append(permission)
@@ -85,7 +87,10 @@ class DemoSeeder(Seeder):
         )
         print('Created User: Verified User')
 
-        unverified_user = Role.query.filter(Role.slug == 'unverified_user').first()
+        unverified_user = Role.query.filter(
+            Role.slug == 'unverified_user'
+        ).first()
+
         generate_user(
             first_name="Unverified",
             last_name="User",

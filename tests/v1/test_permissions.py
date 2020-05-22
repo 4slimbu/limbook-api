@@ -72,7 +72,8 @@ class PermissionsTestCase(BaseTestCase):
         res = self.client().get(
             api_base
             + '/permissions'
-            + '?mock_token_verification=True&permission=read:permissions&per_page=2'
+            + '?mock_token_verification=True&permission=read:permissions'
+            + '&per_page=2'
             + '&page=1'
         )
         data = json.loads(res.data)

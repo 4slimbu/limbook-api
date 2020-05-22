@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, abort
 from limbook_api.v1.auth.utils import requires_auth, \
     auth_user_id, validate_profile_data
 from limbook_api.v1.friends import filter_friends
-from limbook_api.v1.posts import filter_posts, Post
+from limbook_api.v1.posts import Post
 from limbook_api.v1.users import User, filter_model
 
 personal = Blueprint('personal', __name__)

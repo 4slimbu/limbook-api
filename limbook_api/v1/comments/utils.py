@@ -10,7 +10,8 @@ def generate_comment(content=None, user_id=None, post_id=None):
     """Generates new comment with random attributes for testing
     """
     comment = Comment(**{
-        'content': content if content else 'Comment' + str(randint(1000, 9999)),
+        'content':
+            content if content else 'Comment' + str(randint(1000, 9999)),
         'user_id': user_id if user_id else randint(1000, 9999),
         'post_id': post_id if post_id else randint(1000, 9999),
     })

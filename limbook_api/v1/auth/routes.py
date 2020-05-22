@@ -8,7 +8,7 @@ from limbook_api.v1.auth.utils import validate_register_data, \
     validate_login_data, generate_token, validate_reset_password_data, \
     validate_verify_email_data, refresh_auth_token, requires_auth, \
     blacklist_token, send_verification_mail, send_reset_password_mail, \
-    get_token_from_auth_header, auth_user_id, validate_profile_data
+    get_token_from_auth_header
 from limbook_api.v1.users import User, Role
 
 auth = Blueprint('auth', __name__)
@@ -195,7 +195,8 @@ def send_reset_password_email():
 
         # save it to database
         user.password_reset_code = reset_password_code
-        user.password_reset_code_expires_on = datetime.utcnow() + timedelta(hours=1)
+        user.password_reset_code_expires_on = datetime.utcnow() + timedelta(
+            hours=1)
         user.update()
 
         # send email

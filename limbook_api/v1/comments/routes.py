@@ -191,7 +191,8 @@ def reply_comments(comment_id):
         # reply comment
         reply = Comment(**{
             'content': data.get('content'),
-            'parent_id': comment.parent_id if comment.parent_id else comment.id,
+            'parent_id':
+                comment.parent_id if comment.parent_id else comment.id,
             'user_id': auth_user_id(),
             'post_id': comment.post_id
         })
