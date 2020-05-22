@@ -24,6 +24,9 @@ class Config:
     # Refresh token validity in seconds
     REFRESH_TOKEN_VALID_TIME = 60 * 60
 
+    # -------------------------------------------
+    # Demo
+    # -------------------------------------------
     # Initial roles and permissions
     #
     # It may not reflect the current roles and permissions in the system
@@ -60,6 +63,8 @@ class Config:
         "unverified_user": []
     }
 
+    DEMO_USER_PASSWORD = os.environ.get('DEMO_USER_PASSWORD', 'password')
+
     # -------------------------------------------
     # Flask-Caching
     # -------------------------------------------
@@ -76,6 +81,12 @@ class Config:
 
     # Display or Hide sqlalchemy track modifications
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # -------------------------------------------
+    # Redis
+    # -------------------------------------------
+    USE_REDIS = True
+    REDIS_URL = os.environ.get('REDIS_URL')
 
     # -------------------------------------------
     # Image
@@ -100,8 +111,8 @@ class Config:
     # -------------------------------------------
     # Email
     # -------------------------------------------
-    MAIL_SERVER = 'smtp.googlemail.com'
-    MAIL_PORT = 587
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = os.environ.get('MAIL_PORT')
     MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('EMAIL_USER')
-    MAIL_PASSWORD = os.environ.get('EMAIL_PASS')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')

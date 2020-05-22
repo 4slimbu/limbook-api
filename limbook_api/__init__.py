@@ -2,17 +2,19 @@ from flask import Flask, render_template
 from flask_bcrypt import Bcrypt
 from flask_caching import Cache
 from flask_mail import Mail
+from rq import Queue
 
 from config import Config
 from limbook_api.db import setup_db
 from limbook_api.errors import AuthError, ImageUploadError
 from limbook_api.errors.error_handlers import register_error_handlers
 from limbook_api.v1 import register_v1_blueprints
+from worker import conn
 
 bcrypt = Bcrypt()
 cache = Cache()
 mail = Mail()
-
+q = Queue(connection=conn)
 
 def create_app(config_class=Config):
     """ Creates the flask app"""
