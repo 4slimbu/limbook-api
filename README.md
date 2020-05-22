@@ -1,9 +1,19 @@
 # Limbook Api: 1.1.1
 [![Actions Status](https://github.com/limvus/limbook-api/workflows/Build%20And%20Test/badge.svg)](https://github.com/limvus/limbook-api/actions)
 
-Limbook api is a minimal api for creating social app like facebook or twitter. 
+Limbook api is a minimal REST Api for creating social app like facebook or twitter. 
 It has basic features like user, role and permission management plus support 
 for posts, comments, react and friends.
+
+**Technology Used**
+- Python
+- Flask
+- Flask-SQlalchemy
+- Redis
+- Redis Queue
+- Postgresql
+
+All python code follows [PEP8 style guidelines](https://www.python.org/dev/peps/pep-0008/) 
 
 **For documentation of API visit here:**
  
@@ -32,14 +42,6 @@ for posts, comments, react and friends.
 - redis-server
 
 Note: may run in lower version but haven't tested.
-
-## Technology Used
-- Python
-- Flask
-- Flask-SQlalchemy
-- Redis
-- Redis Queue
-- Postgresql
 
 ## Installation
 Using virtual environment
@@ -103,6 +105,9 @@ python run.py
 export FLASK_APP=limbook_api
 flask run
 ```
+This should bring the api up and running at:
+
+http://localhost:5000
 
 ## Test
 ```shell script
@@ -124,6 +129,16 @@ from limbook_api.models import Post
 post = Post(user_id="id",content="my post")
 db.session.add(post)
 ```
+
+## Deployment: Heroku
+- Create new app in heroku
+- Add Postgresql and Redis as addons
+- Connect github to the app
+- Set config vars (secret_key, db url, mail credentials etc)
+- Create pipeline and add app to the pipeline
+- Choose auto-deploy master branch
+- Make sure both web and worker dyno are running:  
+    heroku ps:scale web=1 worker=1
 
 ## Contribution
 If you want to contribute, just fork the repository and play around, create 
