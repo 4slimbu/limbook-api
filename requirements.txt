@@ -13,3 +13,5 @@ Flask-Bcrypt==0.7.1
 PyJWT==1.7.1
 Flask-Caching==1.8.0
 Flask-Mail==0.9.1
+redis==3.5.2
+rq==1.4.1
