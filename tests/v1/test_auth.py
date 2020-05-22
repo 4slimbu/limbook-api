@@ -27,7 +27,8 @@ class UserTestCase(BaseTestCase):
 
     def test_cannot_access_protected_route_with_invalid_token(self):
         # given
-        headers = header_with_token(self.app.config.get('EXAMPLE_INVALID_TOKEN'))
+        headers = header_with_token(
+            self.app.config.get('EXAMPLE_INVALID_TOKEN'))
 
         # make request
         res = self.client().get(

@@ -144,7 +144,7 @@ def validate_reset_password_data(data):
         validated_data['password_reset_code'] = data.get('password_reset_code')
     else:
         errors['password_reset_code'] = 'Password reset code is required'
-        
+
     # check email
     if data.get('email'):
         validated_data['email'] = data.get('email')
@@ -276,8 +276,6 @@ def refresh_auth_token():
         "access_token": access_token,
         "refresh_token": refresh_token
     }
-
-
 
 
 def decode_token(token):
@@ -422,7 +420,7 @@ def send_verification_mail(user):
         sender='noreply@demo.com',
         recipients=[user.email]
     )
-    msg.body = f'''Please use this token to verify: 
+    msg.body = f'''Please use this token to verify:
     { verification_code }
 
     If you did not make this request then simply ignore this email.
@@ -445,7 +443,7 @@ def send_reset_password_mail(user, reset_password_code):
         sender='noreply@demo.com',
         recipients=[user.email]
     )
-    msg.body = f'''Please use this token to reset your password: 
+    msg.body = f'''Please use this token to reset your password:
     { reset_password_code }
 
     If you did not make this request then simply ignore this email.

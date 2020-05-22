@@ -16,6 +16,7 @@ cache = Cache()
 mail = Mail()
 q = Queue(connection=conn)
 
+
 def create_app(config_class=Config):
     """ Creates the flask app"""
 

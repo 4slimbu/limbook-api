@@ -177,6 +177,7 @@ class UsersTestCase(BaseTestCase):
             update_data.get('role_id')
         )
 
+
 # Make the tests conveniently executable
 if __name__ == "__main__":
     main()

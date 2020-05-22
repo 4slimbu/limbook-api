@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, abort, request
 
-from limbook_api.v1.auth.utils import requires_auth, auth_user_id
-from limbook_api.v1.roles import Role, filter_roles, \
-    validate_role_data, validate_role_update_data, get_permission_list_using_ids
+from limbook_api.v1.auth.utils import requires_auth
+from limbook_api.v1.roles import Role, filter_roles, validate_role_data, \
+    validate_role_update_data, get_permission_list_using_ids
 
 roles = Blueprint('roles', __name__)
 
