@@ -19,6 +19,7 @@ on top of this api.
 - Redis
 - Redis Queue
 - Postgresql
+- Auth0
 
 All python code follows [PEP8 style guidelines](https://www.python.org/dev/peps/pep-0008/) 
 
