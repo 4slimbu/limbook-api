@@ -20,24 +20,7 @@ class PostsTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'no_permission')
 
-    def test_cannot_get_other_user_posts(self):
-        # given
-        generate_post()
-        generate_post()
-
-        # make request
-        res = self.client().get(
-            api_base
-            + '/posts'
-            + '?mock_token_verification=True&permission=read:posts'
-        )
-        data = json.loads(res.data)
-
-        # assert
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(len(data.get('posts')), 0)
-
-    def test_can_get_own_posts(self):
+    def test_can_get_posts(self):
         # given
         for i in range(0, 25):
             generate_post()
@@ -67,23 +50,7 @@ class PostsTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'no_permission')
 
-    def test_cannot_get_other_user_post(self):
-        # given
-        generate_post()
-
-        # make request
-        res = self.client().get(
-            api_base
-            + '/posts/1'
-            + '?mock_token_verification=True&permission=read:posts'
-        )
-        data = json.loads(res.data)
-
-        # assert
-        self.assertEqual(res.status_code, 403)
-        self.assertEqual(data.get('error_code'), 'forbidden')
-
-    def test_can_get_own_post(self):
+    def test_can_get_post(self):
         # given
         generate_post(user_id=test_user_id)
 
