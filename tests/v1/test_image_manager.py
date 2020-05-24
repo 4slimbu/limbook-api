@@ -28,27 +28,8 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertFalse(
             os.path.isfile(self.app.root_path + url.get('thumb')))
 
-    def test_cannot_access_image_routes_without_correct_permission(self):
-        # create image
-        res = self.client().post(
-            api_base
-            + '/images'
-            + '?mock_token_verification=True'
-        )
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 401)
-        self.assertEqual(data.get('error_code'), 'no_permission')
-
-        # get image
-        res = self.client().get(
-            api_base
-            + '/images/1'
-            + '?mock_token_verification=True'
-        )
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 401)
-        self.assertEqual(data.get('error_code'), 'no_permission')
-
+    # Get Images-------------------------------------------------
+    def test_cannot_get_images_without_correct_permission(self):
         # get images
         res = self.client().get(
             api_base
@@ -59,20 +40,10 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data.get('error_code'), 'no_permission')
 
-        # delete image
-        res = self.client().delete(
-            api_base
-            + '/images/1'
-            + '?mock_token_verification=True'
-        )
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 401)
-        self.assertEqual(data.get('error_code'), 'no_permission')
-
-    def test_cannot_retrieve_other_images(self):
-        """ I can only retrieve user images """
+    def test_cannot_get_other_images(self):
+        """ I can only get own images """
         # given
-        image = generate_image()
+        generate_image()
 
         # make request
         res = self.client().get(
@@ -87,8 +58,8 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(len(data.get('images')), 0)
         self.assertEqual(data.get('total'), 0)
 
-    def test_can_retrieve_own_images_with_pagination(self):
-        """ I can retrieve all user images with pagination"""
+    def test_can_get_own_images(self):
+        """ I can get all my images with pagination"""
         # given
         for i in range(0, 15):
             generate_image(user_id=test_user_id)
@@ -109,6 +80,78 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(len(data.get('images')), pagination_limit)
         self.assertEqual(data.get('total'), 15)
         self.assertEqual(len(data.get('query_args')), 2)
+
+    # Get Image --------------------------------------------------
+    def test_cannot_get_image_without_correct_permission(self):
+        # get image
+        res = self.client().get(
+            api_base
+            + '/images/1'
+            + '?mock_token_verification=True'
+        )
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
+
+    def test_cannot_get_others_image(self):
+        """ User should not be able to retrieve other images
+
+        Here we are creating the image with random user_id
+        but are using the test_user_id to authenticate
+        so, user shouldn't be able to get the image
+        """
+        # given
+        image = generate_image()
+        image_id = image.id
+
+        # make request
+        res = self.client().get(
+            api_base
+            + '/images/' + str(image_id)
+            + '?mock_token_verification=True&permission=create:images'
+        )
+
+        # assert
+        self.assertEqual(res.status_code, 401)
+
+    def test_can_get_own_image(self):
+        """
+        If I create the image, then I should be able to
+        retrieve it.
+        """
+        # given
+        image = generate_image(
+            user_id=test_user_id,
+            url=json.dumps({
+                "thumb": "thumb.jpg",
+                "medium": "medium.jpg",
+                "large": "large.jpg"
+            })
+        )
+
+        # make request
+        res = self.client().get(
+            api_base
+            + '/images/' + str(image.id)
+            + '?mock_token_verification=True&permission=read:images'
+        )
+        data = json.loads(res.data)
+
+        # assert
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(image.format(), data.get('image'))
+
+    # Create Image ------------------------------------------------
+    def test_cannot_create_image_without_correct_permission(self):
+        # create image
+        res = self.client().post(
+            api_base
+            + '/images'
+            + '?mock_token_verification=True'
+        )
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_cannot_upload_invalid_image(self):
         # given
@@ -185,53 +228,17 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(data.get('image').get('user_id'), test_user_id)
         self.check_if_image_exists(data.get('image').get('url'))
 
-    def test_cannot_retrieve_others_image_by_id(self):
-        """ User should not be able to retrieve other images
-
-        Here we are creating the image with random user_id
-        but are using the test_user_id to authenticate
-        so, user shouldn't be able to get the image
-        """
-        # given
-        image = generate_image()
-        image_id = image.id
-
-        # make request
-        res = self.client().get(
+    # Delete Image ------------------------------------------------
+    def test_cannot_delete_image_without_correct_permission(self):
+        # delete image
+        res = self.client().delete(
             api_base
-            + '/images/' + str(image_id)
-            + '?mock_token_verification=True&permission=create:images'
-        )
-
-        # assert
-        self.assertEqual(res.status_code, 401)
-
-    def test_can_retrieve_own_image_by_id(self):
-        """
-        If I create the image, then I should be able to
-        retrieve it.
-        """
-        # given
-        image = generate_image(
-            user_id=test_user_id,
-            url=json.dumps({
-                "thumb": "thumb.jpg",
-                "medium": "medium.jpg",
-                "large": "large.jpg"
-            })
-        )
-
-        # make request
-        res = self.client().get(
-            api_base
-            + '/images/' + str(image.id)
-            + '?mock_token_verification=True&permission=read:images'
+            + '/images/1'
+            + '?mock_token_verification=True'
         )
         data = json.loads(res.data)
-
-        # assert
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(image.format(), data.get('image'))
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_cannot_delete_others_image(self):
         """
@@ -281,10 +288,7 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(data.get('deleted_id'), image.get('id'))
         self.check_if_image_does_not_exists(image.get('url'))
 
-    # -------------------------------------------------
-    # Test involving posts
-    # -------------------------------------------------
-
+    # Test involving posts -------------------------------------------------
     def test_cannot_access_post_image_routes_without_permission(self):
         # attach image to post
         res = self.client().post(
