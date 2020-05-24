@@ -3,7 +3,7 @@ from unittest import main
 from flask import json
 
 from limbook_api.v1.image_manager import generate_image, Image
-from limbook_api.v1.posts import generate_post, Post
+from limbook_api.v1.posts import generate_post
 from tests.base import BaseTestCase, test_user_id, api_base
 
 
