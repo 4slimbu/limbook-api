@@ -1,14 +1,12 @@
-import secrets
-from datetime import datetime, timedelta
 from functools import wraps
+from functools import wraps
+from urllib.request import urlopen
 
 import jwt
-from flask import current_app, abort, request
-from flask_mail import Message
+from flask import current_app, abort, request, json
 from jose import jwt
 
-from limbook_api import bcrypt, AuthError, cache, mail, q
-from limbook_api.v1.users import User, ValidationError
+from limbook_api import AuthError, cache
 
 
 def mock_token_verification(permission=None):
@@ -28,207 +26,10 @@ def mock_token_verification(permission=None):
     return {
         'iat': 1589041232,
         'exp': 1589048432,
-        'sub': 1,
+        'sub': "auth0|test_user_id",
         'is_verified': True,
         'permissions': permission
     }
-
-
-def validate_register_data(data):
-    data = data if data else {}
-    validated_data = {}
-    errors = {}
-
-    # check first_name
-    if data.get('first_name'):
-        validated_data['first_name'] = data.get('first_name')
-    else:
-        errors['first_name'] = 'First name is required'
-
-    # check last_name
-    if data.get('last_name'):
-        validated_data['last_name'] = data.get('last_name')
-    else:
-        errors['last_name'] = 'Last name is required'
-
-    # check email
-    if data.get('email'):
-        validated_data['email'] = data.get('email')
-    else:
-        errors['email'] = 'Email is required'
-
-    # check password
-    if data.get('password'):
-        password = data.get('password')
-    else:
-        errors['password'] = 'Password is required'
-
-    # check confirm password
-    if data.get('confirm_password'):
-        pass
-    else:
-        errors['confirm_password'] = 'Confirm password is required'
-
-    if data.get('confirm_password') != data.get('password'):
-        errors['confirm_password'] = 'Password and Confirm password must match'
-
-    if data.get('email'):
-        user = User.query.filter(User.email == data.get('email')).first()
-        if user:
-            errors['email'] = 'Email already exists'
-
-    # return errors
-    if len(errors) > 0:
-        raise ValidationError(errors)
-
-    # secure password
-    validated_data['password'] = bcrypt.generate_password_hash(
-        password
-    ).decode('utf-8')
-
-    # return validated data
-    return validated_data
-
-
-def validate_login_data(data):
-    data = data if data else {}
-    validated_data = {}
-    errors = {}
-
-    # check email
-    if data.get('email'):
-        validated_data['email'] = data.get('email')
-    else:
-        errors['email'] = 'Email is required'
-
-    # check password
-    if data.get('password'):
-        validated_data['password'] = data.get('password')
-    else:
-        errors['password'] = 'Password is required'
-
-    # return errors
-    if len(errors) > 0:
-        raise ValidationError(errors)
-
-    # return validated data
-    return validated_data
-
-
-def validate_verify_email_data(data):
-    data = data if data else {}
-    validated_data = {}
-    errors = {}
-
-    # check email
-    if data.get('verification_code'):
-        validated_data['verification_code'] = data.get('verification_code')
-    else:
-        errors['verification_code'] = 'Verification code is required'
-
-    # return errors
-    if len(errors) > 0:
-        raise ValidationError(errors)
-
-    # return validated data
-    return validated_data
-
-
-def validate_reset_password_data(data):
-    data = data if data else {}
-    validated_data = {}
-    errors = {}
-
-    # check password reset code
-    if data.get('password_reset_code'):
-        validated_data['password_reset_code'] = data.get('password_reset_code')
-    else:
-        errors['password_reset_code'] = 'Password reset code is required'
-
-    # check email
-    if data.get('email'):
-        validated_data['email'] = data.get('email')
-    else:
-        errors['email'] = 'Email is required'
-
-    # check password
-    if data.get('password'):
-        password = data.get('password')
-    else:
-        errors['password'] = 'Password is required'
-
-    # check confirm password
-    if data.get('confirm_password'):
-        pass
-    else:
-        errors['confirm_password'] = 'Confirm Password is required'
-
-    # confirm password and password must match
-    if data.get('confirm_password') != data.get('password'):
-        errors['confirm_password'] = 'Password and Confirm password must match'
-
-    # return errors
-    if len(errors) > 0:
-        raise ValidationError(errors)
-
-    # secure password
-    validated_data['password'] = bcrypt.generate_password_hash(
-        password
-    ).decode('utf-8')
-
-    # return validated data
-    return validated_data
-
-
-def generate_token(email, password, is_refresh_token=False):
-    """Generate token
-
-    Generates token or refresh token if user with given email and
-    password exists in the database
-
-    Returns:
-        token (string) or None
-    """
-    user = User.query.filter_by(email=email).first()
-
-    if user and bcrypt.check_password_hash(user.password, password):
-        if is_refresh_token:
-            valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
-            return encode_auth_token(user, valid_seconds=valid_seconds)
-        else:
-            valid_seconds = current_app.config.get('ACCESS_TOKEN_VALID_TIME')
-            return encode_auth_token(user, valid_seconds=valid_seconds)
-
-    else:
-        abort(400)
-
-
-def encode_auth_token(user, valid_seconds):
-    """
-    Generates the Auth Token
-
-    Returns:
-        token (string)
-    """
-    try:
-        payload = {
-            'exp': datetime.utcnow() + timedelta(seconds=valid_seconds),
-            'iat': datetime.utcnow(),
-            'sub': str(user.id),
-            'is_verified': user.email_verified,
-            'permissions': user.format().get('permissions'),
-            # while testing, tokens are generated in quick succession and
-            # for same payload, it is not possible to differentiate them
-            # so this rand key helps to generate different token.
-            'rand': secrets.token_hex(4)
-        }
-        return jwt.encode(
-            payload,
-            current_app.config.get('SECRET_KEY'),
-            algorithm='HS256'
-        )
-    except Exception as e:
-        abort(500)
 
 
 def get_token_from_auth_header():
@@ -246,69 +47,6 @@ def get_token_from_auth_header():
         abort(401)
 
     return header_parts[1]
-
-
-def refresh_auth_token():
-    """Refresh tokens
-
-    Extract token from request header and if it's valid,
-    blacklist the token and generate new token
-
-    Returns:
-        tokens (dict): new access and refresh token
-    """
-    token = get_token_from_auth_header()
-
-    payload = decode_token(token)
-
-    user = User.query.get(payload.get('sub'))
-
-    if user is None:
-        abort(400)
-
-    blacklist_token(token)
-    valid_seconds = current_app.config.get('ACCESS_TOKEN_VALID_TIME')
-    access_token = encode_auth_token(user, valid_seconds=valid_seconds)
-    valid_seconds = current_app.config.get('REFRESH_TOKEN_VALID_TIME')
-    refresh_token = encode_auth_token(user, valid_seconds=valid_seconds)
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token
-    }
-
-
-def decode_token(token):
-    """
-    Decodes the auth token
-
-    Parameters:
-        token (string)
-
-    Returns:
-        payload (dict)
-    """
-    if is_token_blacklisted(token):
-        raise AuthError({
-            'code': 'token_blacklisted',
-            'description': 'Token access has been revoked'
-        }, 401)
-
-    try:
-        payload = jwt.decode(token, current_app.config.get('SECRET_KEY'))
-        return payload
-
-    except jwt.ExpiredSignatureError:
-        raise AuthError({
-            'code': 'token_expired',
-            'description': 'Token expired'
-        }, 401)
-
-    except Exception as e:
-        raise AuthError({
-            'code': 'invalid_header',
-            'description': 'Unable to parse authentication token.'
-        }, 401)
 
 
 def check_permissions(required_permission, payload):
@@ -363,16 +101,9 @@ def requires_auth(permission=''):
                 )
             else:
                 token = get_token_from_auth_header()
-
-                payload = decode_token(token)
+                payload = verify_decode_jwt(token)
 
             current_app.config['payload'] = payload
-
-            if not payload.get('is_verified'):
-                raise AuthError({
-                    'code': 'user_not_verified',
-                    'description': 'Please verify your email.'
-                }, 401)
 
             if not check_permissions(permission, payload):
                 raise AuthError({
@@ -392,7 +123,7 @@ def auth_user_id():
     if payload is None:
         abort(401)
 
-    return int(payload.get('sub'))
+    return payload.get('sub')
 
 
 def blacklist_token(token):
@@ -405,97 +136,83 @@ def is_token_blacklisted(token):
     return cache.get(token) == 'blacklisted'
 
 
-def send_verification_mail(user):
-    # generate verification code
-    verification_code = secrets.token_hex(8)
-
-    # save it to database
-    user.email_verif_code = verification_code
-    user.email_verif_code_expires_on = datetime.utcnow() + timedelta(hours=1)
-    user.update()
-
-    # send mail
-    msg = Message(
-        'Verify Email Request',
-        sender='noreply@demo.com',
-        recipients=[user.email]
-    )
-    msg.body = f'''Please use this token to verify:
-    { verification_code }
-
-    If you did not make this request then simply ignore this email.
-    '''
-    if current_app.config.get('USE_REDIS'):
-        q.enqueue(send_mail, msg)
-    else:
-        mail.send(msg)
-
-
-def send_mail(msg):
-    from run import app
-    with app.app_context():
-        mail.send(msg)
-
-
-def send_reset_password_mail(user, reset_password_code):
-    msg = Message(
-        'Password Reset Request',
-        sender='noreply@demo.com',
-        recipients=[user.email]
-    )
-    msg.body = f'''Please use this token to reset your password:
-    { reset_password_code }
-
-    If you did not make this request then simply ignore this email.
-    '''
-    if current_app.config.get('USE_REDIS'):
-        q.enqueue(send_mail, msg)
-    else:
-        mail.send(msg)
-
-
-def validate_profile_data(data):
-    data = data if data else {}
-    validated_data = {}
-    errors = {}
-
-    # check first_name
-    if data.get('first_name'):
-        validated_data['first_name'] = data.get('first_name')
-
-    # check last_name
-    if data.get('last_name'):
-        validated_data['last_name'] = data.get('last_name')
-
-    # check email
-    if data.get('email'):
-        errors['email'] = 'Email address cannot be changed.'
-
-    # check password
-    if data.get('password'):
-        validated_data['password'] = data.get('password')
-
-        # check if password and confirm password match
-        if data.get('confirm_password') != data.get('password'):
-            errors['confirm_password'] = 'Password and Confirm password ' \
-                                         'must match'
-
-    # check profile picture
-    if data.get('profile_picture'):
-        validated_data['profile_picture'] = data.get('profile_picture')
-
-    # check cover picture
-    if data.get('cover_picture'):
-        validated_data['cover_picture'] = data.get('cover_picture')
-
-    # return errors
-    if len(errors) > 0:
-        raise ValidationError(errors)
-
-    # return validated data
-    return validated_data
-
-
 def user_can(permission):
     payload = current_app.config.get('payload')
     return check_permissions(permission, payload)
+
+
+def verify_decode_jwt(token):
+    """ Verify the jwt token using auth0.
+
+        Parameters:
+            token (string): Extracted token from Auth header
+
+        Returns:
+            payload (dict): Claims decoded from token
+
+        Raises:
+            AuthError: Unable to verify jwt
+    """
+    auth0_domain = current_app.config.get('AUTH0_DOMAIN')
+    algorithms = current_app.config.get('ALGORITHMS')
+    api_audience = current_app.config.get('API_AUDIENCE')
+
+    jsonurl = urlopen(f'https://{auth0_domain}/.well-known/jwks.json')
+    jwks = json.loads(jsonurl.read())
+
+    # Get the data in the header
+    unverified_header = jwt.get_unverified_header(token)
+
+    # choose our key
+    rsa_key = {}
+    if 'kid' not in unverified_header:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Authorization malformed'
+        }, 401)
+
+    for key in jwks['keys']:
+        if key['kid'] == unverified_header['kid']:
+            rsa_key = {
+                'kty': key['kty'],
+                'kid': key['kid'],
+                'use': key['use'],
+                'n': key['n'],
+                'e': key['e']
+            }
+
+    if rsa_key:
+        try:
+            # use the key to validate the jwt
+            payload = jwt.decode(
+                token,
+                rsa_key,
+                algorithms=algorithms,
+                audience=api_audience,
+                issuer='https://' + auth0_domain + '/'
+            )
+            return payload
+
+        except jwt.ExpiredSignatureError:
+            raise AuthError({
+                'code': 'token_expired',
+                'description': 'Token expired'
+            }, 401)
+
+        except jwt.JWTClaimsError:
+            raise AuthError({
+                'code': 'invalid_claims',
+                'description': 'Incorrect claims. Please check '
+                               'the audience and issuer.'
+            }, 401)
+
+        except Exception:
+            raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Unable to parse authentication token.'
+            }, 400)
+
+    raise AuthError({
+        'code': 'invalid_header',
+        'description': 'Unable to find the appropriate key.'
+    }, 400)

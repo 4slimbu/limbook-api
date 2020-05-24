@@ -6,7 +6,7 @@ db = SQLAlchemy()
 migrate = Migrate(compare_type=True)
 flask_seeder = FlaskSeeder()
 
-from limbook_api.db.base_model import BaseDbModel
+from limbook_api.db.base_model import BaseDbModel  # noqa: E402
 
 
 def setup_db(app):

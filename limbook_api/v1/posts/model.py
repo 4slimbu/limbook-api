@@ -1,5 +1,3 @@
-from flask import json
-
 from limbook_api.db import db, BaseDbModel
 
 
@@ -7,7 +5,7 @@ class Post(BaseDbModel):
     """Posts"""
 
     content = db.Column(db.String, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String, nullable=False)
 
     """
     format()
