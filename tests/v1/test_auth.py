@@ -72,7 +72,7 @@ class AuthTestCase(BaseTestCase):
         # request
         res = self.client().get(
             api_base
-            + '/secure-route',
+            + '/secure-route?mock_token_verification=True',
             headers=headers
         )
         data = json.loads(res.data)

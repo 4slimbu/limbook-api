@@ -48,23 +48,15 @@ class Config:
     # database for the first time. The permissions are used throughout
     # the system, so before updating permissions make sure permissions in
     # the affected routes are updated as well.
-    #
-    # manage:all -> can manage everything
-    # manage:item -> can manage everything related to item
-    # manage_self:item -> can manage own item
     INITIAL_ROLES_AND_PERMISSIONS = {
         "admin": [
             'read:users', 'create:users', 'update:users', 'delete:users',
-            'read:roles', 'create:roles', 'update:roles', 'delete:roles',
-            'read:permissions', 'create:permissions', 'update:permissions',
-            'delete:permissions',
             'read:posts', 'create:posts', 'update:posts', 'delete:posts',
             'read:comments', 'create:comments', 'update:comments',
             'delete:comments',
             'read:reacts', 'create:reacts', 'update:reacts', 'delete:reacts',
             'read:images', 'create:images', 'update:images', 'delete:images',
-            'read:friends', 'create:friends', 'update:friends',
-            'delete:friends'
+            'read:stats'
         ],
         "user": [
             'read:posts', 'create:posts', 'update:posts', 'delete:posts',
@@ -72,8 +64,6 @@ class Config:
             'delete:comments',
             'read:reacts', 'create:reacts', 'update:reacts', 'delete:reacts',
             'read:images', 'create:images', 'update:images', 'delete:images',
-            'read:friends', 'create:friends', 'update:friends',
-            'delete:friends'
         ],
         "unverified_user": []
     }

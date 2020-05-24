@@ -2,15 +2,15 @@
 [![Actions Status](https://github.com/limvus/limbook-api/workflows/Build%20And%20Test/badge.svg)](https://github.com/limvus/limbook-api/actions)
 
 Limbook api is a minimal REST Api for creating social app like facebook or twitter. 
-It has basic features like user, role and permission management plus support 
-for posts, comments, react and friends.
+It has basic features like posts, comments and react.
 
 **Motivation**
 
 I had met quite a few people who have wanted to have their own private social network
 for their office or fun project. So, to help them, I had create this minimal version 
 of the social API which they can integrate easily into their design and have the
-app up and running in no time.
+app up and running in no time. Also, they can take this as a starter and build
+on top of this api.
 
 **Technology Used**
 - Python
@@ -27,11 +27,6 @@ All python code follows [PEP8 style guidelines](https://www.python.org/dev/peps/
 **[API DOCUMENTATION](https://documenter.getpostman.com/view/3230491/SzmmVueg)**
 
 ## Features
-- Authentication
-- User
-- Role
-- Permission
-- Friend
 - Post
 - Comment
 - React
@@ -118,6 +113,7 @@ http://localhost:5000
 
 ## Test
 ```shell script
+# Note: unittest may not detect all the tests. So use PYTEST:
 # Simply run pytest from the root directory.
 pytest
 ```
