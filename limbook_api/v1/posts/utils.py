@@ -39,8 +39,6 @@ def filter_posts(count_only=False):
                 "%{}%".format(request.args.get('search_term'))
             ))
 
-    # TODO: check to see if post is visible to user
-
     # return filtered data
     return filter_model(Post, query, count_only=count_only)
 

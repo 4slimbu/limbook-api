@@ -2,15 +2,11 @@ import os
 import shutil
 from unittest import TestCase
 
-from flask import json
-
-from limbook_api import create_app
 from config_test import TestConfig
+from limbook_api import create_app
 from limbook_api.db import db_drop_and_create_all
-from limbook_api.v1.roles import generate_role
-from limbook_api.v1.users import generate_user
 
-test_user_id = 1
+test_user_id = "auth0|test_user_id"
 api_base = '/v1'
 pagination_limit = TestConfig.PAGINATION
 
@@ -32,7 +28,7 @@ def mock_token_verification(permission=None):
     return {
         'iat': 1589041232,
         'exp': 1589048432,
-        'sub': 1,
+        'sub': test_user_id,
         'is_verified': True,
         'permissions': permission
     }
@@ -40,51 +36,6 @@ def mock_token_verification(permission=None):
 
 def header_with_token(token):
     return {'Authorization': 'Bearer ' + token}
-
-
-def get_access_token(self, permissions=None):
-    permissions = permissions if permissions else []
-    role = generate_role(permissions=permissions)
-    user = generate_user(
-        role_id=role.id,
-        email_verified=True,
-        password="password"
-    )
-
-    login_data = {
-        "email": user.email,
-        "password": "password",
-    }
-
-    res = self.client().post(
-        api_base + '/login',
-        json=login_data
-    )
-
-    return json.loads(res.data).get('access_token')
-
-
-def login_random_user(self, is_verified=True):
-    user = generate_user(password="password", email_verified=is_verified)
-    login_data = {
-        "email": user.email,
-        "password": "password",
-    }
-
-    return self.client().post(
-        api_base + '/login',
-        json=login_data
-    )
-
-
-def assert_successful_login(self, res):
-    data = json.loads(res.data)
-
-    # assert
-    self.assertEqual(res.status_code, 200)
-    self.assertTrue(data.get('success'))
-    self.assertTrue(data.get('access_token'))
-    self.assertTrue(data.get('refresh_token'))
 
 
 class BaseTestCase(TestCase):
