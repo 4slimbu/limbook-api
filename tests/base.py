@@ -6,7 +6,7 @@ from config_test import TestConfig
 from limbook_api import create_app
 from limbook_api.db import db_drop_and_create_all
 
-test_user_id = 1
+test_user_id = "auth0|test_user_id"
 api_base = '/v1'
 pagination_limit = TestConfig.PAGINATION
 
@@ -28,7 +28,7 @@ def mock_token_verification(permission=None):
     return {
         'iat': 1589041232,
         'exp': 1589048432,
-        'sub': 1,
+        'sub': test_user_id,
         'is_verified': True,
         'permissions': permission
     }

@@ -26,7 +26,7 @@ def mock_token_verification(permission=None):
     return {
         'iat': 1589041232,
         'exp': 1589048432,
-        'sub': "auth0|5eca959e92dce80c6f176d58",
+        'sub': "auth0|test_user_id",
         'is_verified': True,
         'permissions': permission
     }
@@ -123,7 +123,7 @@ def auth_user_id():
     if payload is None:
         abort(401)
 
-    return int(payload.get('sub'))
+    return payload.get('sub')
 
 
 def blacklist_token(token):
