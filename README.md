@@ -1,4 +1,4 @@
-# Limbook Api: 1.1.2
+# Limbook Api
 [![Actions Status](https://github.com/limvus/limbook-api/workflows/Build%20And%20Test/badge.svg)](https://github.com/limvus/limbook-api/actions)
 
 Limbook api is a minimal REST Api for creating social app like facebook or twitter. 
