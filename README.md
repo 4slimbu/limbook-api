@@ -5,6 +5,13 @@ Limbook api is a minimal REST Api for creating social app like facebook or twitt
 It has basic features like user, role and permission management plus support 
 for posts, comments, react and friends.
 
+**Motivation**
+
+I had met quite a few people who have wanted to have their own private social network
+for their office or fun project. So, to help them, I had create this minimal version 
+of the social API which they can integrate easily into their design and have the
+app up and running in no time.
+
 **Technology Used**
 - Python
 - Flask

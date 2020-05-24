@@ -70,7 +70,7 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(data.get('error_code'), 'no_permission')
 
     def test_cannot_retrieve_other_images(self):
-        """ I can only retrieve personal images """
+        """ I can only retrieve user images """
         # given
         image = generate_image()
 
@@ -88,7 +88,7 @@ class ImageManagerTestCase(BaseTestCase):
         self.assertEqual(data.get('total'), 0)
 
     def test_can_retrieve_own_images_with_pagination(self):
-        """ I can retrieve all personal images with pagination"""
+        """ I can retrieve all user images with pagination"""
         # given
         for i in range(0, 15):
             generate_image(user_id=test_user_id)
@@ -252,7 +252,7 @@ class ImageManagerTestCase(BaseTestCase):
 
     def test_can_delete_own_image(self):
         """
-        I should be able to delete personal image
+        I should be able to delete user image
         """
         # given
         image = (io.BytesIO(generate_img_in_bytes()), 'test.jpg')

@@ -4,7 +4,7 @@ from tests.base import BaseTestCase
 
 
 class AppTestCase(BaseTestCase):
-    """This class represents the test case for Authentication"""
+    """This class represents the test cases to see if the app is up"""
 
     # App runs ----------------------------------------
     def test_app_is_running(self):

@@ -25,6 +25,19 @@ class Config:
     REFRESH_TOKEN_VALID_TIME = 60 * 60
 
     # -------------------------------------------
+    # Authentication
+    # -------------------------------------------
+    # You can pick between "auth0" and "database"
+    # If you choose auth0 user, roles and permission will be managed by Auth0
+    # If you pick database, all those will be managed in the database
+    AUTH_DRIVER = 'auth0'  # auth0/database
+
+    # If you pick 'auth0' you need to set Auth0 credentials
+    AUTH0_DOMAIN = 'limvus.auth0.com'
+    ALGORITHMS = ['RS256']
+    API_AUDIENCE = 'limbook-api-auth'
+
+    # -------------------------------------------
     # Demo
     # -------------------------------------------
     # Initial roles and permissions
