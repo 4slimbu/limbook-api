@@ -10,7 +10,7 @@ psycopg2-binary==2.8.5
 Pillow==7.1.2
 pytest==5.4.2
 Flask-Bcrypt==0.7.1
-PyJWT==1.7.1
+PyJWT==2.4.0
 Flask-Caching==1.8.0
 Flask-Mail==0.9.1
 redis==3.5.2
